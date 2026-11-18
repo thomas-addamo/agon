@@ -1,0 +1,24 @@
+{
+  "name": "agon",
+  "version": "1.0.0",
+  "description": "Agon — quiz live in classe con WebSocket (Node.js, Express, ws). Progetto TPSIT 5A INFO.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thomas-addamo/agon.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/thomas-addamo/agon/issues"
+  },
+  "homepage": "https://github.com/thomas-addamo/agon#readme",
+  "dependencies": {
+    "express": "^5.3.0",
+    "ws": "^8.23.0"
+  },
+  "private": true
+}

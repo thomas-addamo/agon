@@ -1,0 +1,43 @@
+[
+  {
+    "testo": "Quale protocollo permette al server di mandare dati al browser senza che il browser li chieda?",
+    "risposte": ["HTTP/1.0", "WebSocket", "FTP", "SMTP"],
+    "corretta": 1,
+    "tempo": 20
+  },
+  {
+    "testo": "Con quale prefisso inizia l'indirizzo di una connessione WebSocket non cifrata?",
+    "risposte": ["http://", "wss://", "ws://", "tcp://"],
+    "corretta": 2,
+    "tempo": 15
+  },
+  {
+    "testo": "Nel pacchetto ws, quale evento scatta quando arriva un messaggio dal client?",
+    "risposte": ["'data'", "'receive'", "'open'", "'message'"],
+    "corretta": 3,
+    "tempo": 20
+  },
+  {
+    "testo": "Quale funzione trasforma un oggetto JavaScript in una stringa da mandare sul socket?",
+    "risposte": ["JSON.stringify", "JSON.parse", "toString", "Object.send"],
+    "corretta": 0,
+    "tempo": 15
+  },
+  {
+    "testo": "Come si manda un messaggio a tutti i client collegati con ws?",
+    "risposte": [
+      "ws_server.broadcast(data)",
+      "ws_server.clients.forEach(c => c.send(data))",
+      "ws.sendAll(data)",
+      "server.emit('all', data)"
+    ],
+    "corretta": 1,
+    "tempo": 25
+  },
+  {
+    "testo": "Su quale protocollo di trasporto viaggia una connessione WebSocket?",
+    "risposte": ["UDP", "ICMP", "TCP", "ARP"],
+    "corretta": 2,
+    "tempo": 15
+  }
+]

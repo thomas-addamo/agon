@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agon</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="pagina" style="max-width:640px">
+    <header class="testata">
+      <div class="logo">Ag<span>o</span>n</div>
+      <div class="tenue" id="chi"></div>
+    </header>
+
+    <!-- inserimento nome -->
+    <section id="v-entra" class="nascosto">
+      <form class="scheda" id="form-entra" style="display:flex;flex-direction:column;gap:14px">
+        <h1>Entra nel quiz</h1>
+        <input id="nome" maxlength="20" placeholder="Il tuo nome" autocomplete="off" autofocus>
+        <p class="errore" id="errore"></p>
+        <button class="bottone" type="submit">Entra</button>
+      </form>
+    </section>
+
+    <!-- sala d'attesa -->
+    <section id="v-attesa" class="nascosto">
+      <div class="scheda messaggio-grande">
+        <div class="icona">✓</div>
+        <h1>Sei dentro</h1>
+        <p class="tenue" id="attesa-info">Aspetta che il docente faccia partire il quiz.</p>
+      </div>
+    </section>
+
+    <!-- domanda -->
+    <section id="v-domanda" class="nascosto" style="display:flex;flex-direction:column;gap:16px">
+      <div class="scheda" style="display:flex;flex-direction:column;gap:12px">
+        <div class="testata">
+          <span class="tenue" id="numero-domanda"></span>
+          <span class="secondi" id="secondi"></span>
+        </div>
+        <div class="tempo"><div id="barra"></div></div>
+        <h2 id="testo-domanda"></h2>
+      </div>
+      <div class="risposte" id="risposte"></div>
+    </section>
+
+    <!-- risposta mandata -->
+    <section id="v-inviata" class="nascosto">
+      <div class="scheda messaggio-grande">
+        <div class="icona">⏳</div>
+        <h1>Risposta inviata</h1>
+        <p class="tenue">Aspetta gli altri.</p>
+      </div>
+    </section>
+
+    <!-- esito -->
+    <section id="v-esito" class="nascosto">
+      <div class="scheda messaggio-grande">
+        <div class="icona" id="esito-icona"></div>
+        <h1 id="esito-titolo"></h1>
+        <p class="tenue" id="esito-dettaglio"></p>
+        <h2 id="esito-punti"></h2>
+      </div>
+    </section>
+
+    <!-- fine -->
+    <section id="v-fine" class="nascosto">
+      <div class="scheda messaggio-grande">
+        <div class="icona">🏁</div>
+        <h1 id="fine-posizione"></h1>
+        <p class="tenue" id="fine-punti"></p>
+      </div>
+    </section>
+
+    <p class="tenue nascosto" id="scollegato">Connessione persa, riprovo…</p>
+  </main>
+
+  <script src="/comune.js"></script>
+  <script src="/player.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agon · Docente</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="pagina">
+    <header class="testata">
+      <div class="logo">Ag<span>o</span>n</div>
+      <div class="tenue" id="avanzamento"></div>
+    </header>
+
+    <!-- attesa -->
+    <section id="v-attesa" class="nascosto">
+      <div class="scheda" style="display:flex;flex-direction:column;gap:16px">
+        <div>
+          <p class="tenue" style="margin:0 0 4px">Gli studenti entrano da</p>
+          <h1 id="indirizzo"></h1>
+        </div>
+        <h2><span id="n-giocatori">0</span> in sala</h2>
+        <ul class="nomi" id="lista-nomi"></ul>
+        <div><button class="bottone" id="b-avvia" disabled>Inizia il quiz</button></div>
+      </div>
+    </section>
+
+    <!-- domanda e soluzione -->
+    <section id="v-domanda" class="nascosto" style="display:flex;flex-direction:column;gap:20px">
+      <div class="scheda" style="display:flex;flex-direction:column;gap:14px">
+        <div class="testata">
+          <span class="tenue" id="risposte-date"></span>
+          <span class="secondi" id="secondi"></span>
+        </div>
+        <div class="tempo"><div id="barra"></div></div>
+        <h1 id="testo-domanda"></h1>
+      </div>
+      <div class="risposte" id="risposte"></div>
+      <div><button class="bottone" id="b-avanti"></button></div>
+    </section>
+
+    <!-- classifica e fine -->
+    <section id="v-classifica" class="nascosto">
+      <div class="scheda" style="display:flex;flex-direction:column;gap:16px">
+        <h1 id="titolo-classifica">Classifica</h1>
+        <ol class="classifica" id="classifica"></ol>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="bottone" id="b-prossima"></button>
+          <button class="bottone secondario" id="b-ricomincia">Ricomincia</button>
+        </div>
+      </div>
+    </section>
+
+    <p class="tenue nascosto" id="scollegato">Connessione persa, riprovo…</p>
+  </main>
+
+  <script src="/comune.js"></script>
+  <script src="/host.js"></script>
+</body>
+</html>

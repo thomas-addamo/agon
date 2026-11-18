@@ -1,0 +1,232 @@
+:root {
+  --sfondo: #f4f1ea;
+  --carta: #ffffff;
+  --testo: #1d1b18;
+  --tenue: #6b665d;
+  --bordo: #ddd7cb;
+  --accento: #c2410c;
+  --ok: #15803d;
+  --ko: #b91c1c;
+  --a: #2563eb;
+  --b: #d97706;
+  --c: #059669;
+  --d: #9333ea;
+  --raggio: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sfondo: #16140f;
+    --carta: #221f19;
+    --testo: #f1ede4;
+    --tenue: #a39d90;
+    --bordo: #3a352c;
+    --accento: #fb923c;
+    --ok: #4ade80;
+    --ko: #f87171;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; height: 100%; }
+
+body {
+  background: var(--sfondo);
+  color: var(--testo);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+.pagina {
+  min-height: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.testata {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 1.4rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.logo span { color: var(--accento); }
+
+.tenue { color: var(--tenue); }
+
+.scheda {
+  background: var(--carta);
+  border: 1px solid var(--bordo);
+  border-radius: var(--raggio);
+  padding: 20px;
+}
+
+h1, h2 { margin: 0; line-height: 1.2; }
+h1 { font-size: clamp(1.5rem, 4vw, 2.6rem); }
+h2 { font-size: 1.2rem; }
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 0;
+  border-radius: 10px;
+}
+
+.bottone {
+  background: var(--accento);
+  color: #fff;
+  font-weight: 700;
+  padding: 12px 22px;
+}
+.bottone:disabled { opacity: 0.4; cursor: default; }
+.bottone.secondario {
+  background: transparent;
+  color: var(--testo);
+  border: 1px solid var(--bordo);
+}
+
+input {
+  font: inherit;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--bordo);
+  background: var(--sfondo);
+  color: var(--testo);
+}
+
+.nascosto { display: none !important; }
+
+/* risposte A B C D */
+.risposte {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 560px) {
+  .risposte { grid-template-columns: 1fr; }
+}
+
+.risposta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 72px;
+  padding: 14px 18px;
+  border-radius: var(--raggio);
+  color: #fff;
+  font-weight: 650;
+  font-size: 1.05rem;
+  text-align: left;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.risposta:active { transform: scale(0.98); }
+.risposta .lettera {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.22);
+  font-weight: 800;
+}
+.risposta[data-i="0"] { background: var(--a); }
+.risposta[data-i="1"] { background: var(--b); }
+.risposta[data-i="2"] { background: var(--c); }
+.risposta[data-i="3"] { background: var(--d); }
+.risposta.spenta { opacity: 0.28; }
+.risposta.giusta { outline: 4px solid var(--ok); outline-offset: 3px; }
+.risposta .conteggio { margin-left: auto; font-size: 1.3rem; }
+
+/* barra del tempo */
+.tempo {
+  height: 8px;
+  border-radius: 99px;
+  background: var(--bordo);
+  overflow: hidden;
+}
+.tempo div {
+  height: 100%;
+  width: 100%;
+  background: var(--accento);
+  transform-origin: left;
+}
+
+.secondi {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: 1.6rem;
+}
+
+/* elenchi */
+.nomi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.nomi li {
+  background: var(--sfondo);
+  border: 1px solid var(--bordo);
+  border-radius: 99px;
+  padding: 6px 14px;
+  font-weight: 600;
+}
+
+.classifica {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.classifica li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: var(--sfondo);
+  border-radius: 10px;
+  font-weight: 600;
+}
+.classifica .pos {
+  width: 28px;
+  font-weight: 800;
+  color: var(--tenue);
+  font-variant-numeric: tabular-nums;
+}
+.classifica .punti {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.classifica li.offline { opacity: 0.5; }
+
+.messaggio-grande {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 16px;
+}
+.messaggio-grande .icona { font-size: 3rem; line-height: 1; }
+.ok { color: var(--ok); }
+.ko { color: var(--ko); }
+
+.errore { color: var(--ko); min-height: 1.4em; margin: 0; }
