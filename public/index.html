@@ -7,73 +7,79 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <main class="pagina" style="max-width:640px">
-    <header class="testata">
-      <div class="logo">Ag<span>o</span>n</div>
-      <div class="tenue" id="chi"></div>
-    </header>
+  <header class="barra">
+    <div class="barra-dentro">
+      <div class="logo">Agon</div>
+      <div class="info" id="chi"></div>
+    </div>
+  </header>
 
+  <main class="pagina stretta">
     <!-- inserimento nome -->
-    <section id="v-entra" class="nascosto">
-      <form class="scheda" id="form-entra" style="display:flex;flex-direction:column;gap:14px">
-        <h1>Entra nel quiz</h1>
+    <section id="v-entra" class="nascosto" style="display:flex;flex-direction:column;gap:36px">
+      <div class="eroe">
+        <p class="occhiello">Quiz live</p>
+        <h1>Pronto a giocare.</h1>
+        <p class="sottotitolo tenue">Scrivi il tuo nome per entrare.</p>
+      </div>
+      <form class="modulo" id="form-entra">
         <input id="nome" maxlength="20" placeholder="Il tuo nome" autocomplete="off" autofocus>
         <p class="errore" id="errore"></p>
-        <button class="bottone" type="submit">Entra</button>
+        <button class="bottone largo" type="submit">Entra</button>
       </form>
     </section>
 
     <!-- sala d'attesa -->
     <section id="v-attesa" class="nascosto">
-      <div class="scheda messaggio-grande">
+      <div class="tessera messaggio-grande">
         <div class="icona">✓</div>
-        <h1>Sei dentro</h1>
+        <h2>Sei dentro.</h2>
         <p class="tenue" id="attesa-info">Aspetta che il docente faccia partire il quiz.</p>
       </div>
     </section>
 
     <!-- domanda -->
-    <section id="v-domanda" class="nascosto" style="display:flex;flex-direction:column;gap:16px">
-      <div class="scheda" style="display:flex;flex-direction:column;gap:12px">
-        <div class="testata">
-          <span class="tenue" id="numero-domanda"></span>
-          <span class="secondi" id="secondi"></span>
-        </div>
+    <section id="v-domanda" class="nascosto" style="display:flex;flex-direction:column;gap:24px">
+      <div class="eroe" style="gap:14px">
+        <p class="occhiello" id="numero-domanda" style="font-size:17px"></p>
+        <h2 id="testo-domanda" style="font-size:clamp(22px,5vw,32px)"></h2>
+      </div>
+      <div class="riga-tempo">
         <div class="tempo"><div id="barra"></div></div>
-        <h2 id="testo-domanda"></h2>
+        <span class="secondi" id="secondi"></span>
       </div>
       <div class="risposte" id="risposte"></div>
     </section>
 
     <!-- risposta mandata -->
     <section id="v-inviata" class="nascosto">
-      <div class="scheda messaggio-grande">
+      <div class="tessera messaggio-grande">
         <div class="icona">⏳</div>
-        <h1>Risposta inviata</h1>
+        <h2>Risposta inviata.</h2>
         <p class="tenue">Aspetta gli altri.</p>
       </div>
     </section>
 
     <!-- esito -->
     <section id="v-esito" class="nascosto">
-      <div class="scheda messaggio-grande">
+      <div class="tessera messaggio-grande">
         <div class="icona" id="esito-icona"></div>
-        <h1 id="esito-titolo"></h1>
+        <h2 id="esito-titolo"></h2>
         <p class="tenue" id="esito-dettaglio"></p>
-        <h2 id="esito-punti"></h2>
+        <p class="sottotitolo" id="esito-punti"></p>
       </div>
     </section>
 
     <!-- fine -->
     <section id="v-fine" class="nascosto">
-      <div class="scheda messaggio-grande">
+      <div class="tessera messaggio-grande">
         <div class="icona">🏁</div>
-        <h1 id="fine-posizione"></h1>
-        <p class="tenue" id="fine-punti"></p>
+        <h2 id="fine-posizione"></h2>
+        <p class="sottotitolo tenue" id="fine-punti"></p>
       </div>
     </section>
 
-    <p class="tenue nascosto" id="scollegato">Connessione persa, riprovo…</p>
+    <p class="avviso nascosto" id="scollegato">Connessione persa, riprovo…</p>
   </main>
 
   <script src="/comune.js"></script>

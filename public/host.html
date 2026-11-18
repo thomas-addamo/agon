@@ -7,52 +7,57 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <main class="pagina">
-    <header class="testata">
-      <div class="logo">Ag<span>o</span>n</div>
-      <div class="tenue" id="avanzamento"></div>
-    </header>
+  <header class="barra">
+    <div class="barra-dentro">
+      <div class="logo">Agon</div>
+      <div class="info" id="avanzamento"></div>
+    </div>
+  </header>
 
+  <main class="pagina">
     <!-- attesa -->
-    <section id="v-attesa" class="nascosto">
-      <div class="scheda" style="display:flex;flex-direction:column;gap:16px">
-        <div>
-          <p class="tenue" style="margin:0 0 4px">Gli studenti entrano da</p>
-          <h1 id="indirizzo"></h1>
-        </div>
+    <section id="v-attesa" class="nascosto" style="display:flex;flex-direction:column;gap:40px">
+      <div class="eroe">
+        <p class="occhiello">Quiz live</p>
+        <h1>Entra da qui.</h1>
+        <p class="sottotitolo" id="indirizzo"></p>
+      </div>
+      <div class="tessera eroe" style="gap:24px">
         <h2><span id="n-giocatori">0</span> in sala</h2>
         <ul class="nomi" id="lista-nomi"></ul>
-        <div><button class="bottone" id="b-avvia" disabled>Inizia il quiz</button></div>
+        <button class="bottone" id="b-avvia" disabled>Inizia il quiz</button>
       </div>
     </section>
 
     <!-- domanda e soluzione -->
-    <section id="v-domanda" class="nascosto" style="display:flex;flex-direction:column;gap:20px">
-      <div class="scheda" style="display:flex;flex-direction:column;gap:14px">
-        <div class="testata">
-          <span class="tenue" id="risposte-date"></span>
-          <span class="secondi" id="secondi"></span>
-        </div>
-        <div class="tempo"><div id="barra"></div></div>
+    <section id="v-domanda" class="nascosto" style="display:flex;flex-direction:column;gap:32px">
+      <div class="eroe" style="gap:20px">
+        <p class="occhiello" id="risposte-date"></p>
         <h1 id="testo-domanda"></h1>
       </div>
+      <div class="riga-tempo">
+        <div class="tempo"><div id="barra"></div></div>
+        <span class="secondi" id="secondi"></span>
+      </div>
       <div class="risposte" id="risposte"></div>
-      <div><button class="bottone" id="b-avanti"></button></div>
+      <div class="azioni"><button class="bottone" id="b-avanti"></button></div>
     </section>
 
     <!-- classifica e fine -->
-    <section id="v-classifica" class="nascosto">
-      <div class="scheda" style="display:flex;flex-direction:column;gap:16px">
+    <section id="v-classifica" class="nascosto" style="display:flex;flex-direction:column;gap:32px">
+      <div class="eroe">
         <h1 id="titolo-classifica">Classifica</h1>
+      </div>
+      <div class="tessera" style="padding-top:16px;padding-bottom:16px">
         <ol class="classifica" id="classifica"></ol>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="bottone" id="b-prossima"></button>
-          <button class="bottone secondario" id="b-ricomincia">Ricomincia</button>
-        </div>
+      </div>
+      <div class="azioni">
+        <button class="bottone" id="b-prossima"></button>
+        <button class="bottone secondario" id="b-ricomincia">Ricomincia</button>
       </div>
     </section>
 
-    <p class="tenue nascosto" id="scollegato">Connessione persa, riprovo…</p>
+    <p class="avviso nascosto" id="scollegato">Connessione persa, riprovo…</p>
   </main>
 
   <script src="/comune.js"></script>
