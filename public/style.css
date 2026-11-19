@@ -1,349 +1,199 @@
-/* Stile ispirato al linguaggio visivo di apple.com:
-   font di sistema, tanto spazio, superfici grigie senza bordi, bottoni a pillola. */
+/* =====================================================================
+   Agon — stile PROVVISORIO
+   Serve solo a rendere le pagine usabili mentre costruiamo l'app.
+   Verrà sostituito dal design system: i nomi delle classi resteranno
+   gli stessi, cambieranno i valori delle variabili e i dettagli.
+   ===================================================================== */
 
 :root {
   --sfondo: #ffffff;
-  --superficie: #f5f5f7;
-  --testo: #1d1d1f;
-  --tenue: #86868b;
-  --linea: #d2d2d7;
-  --blu: #0071e3;
-  --blu-hover: #0077ed;
-  --link: #0066cc;
-  --barra: rgba(22, 22, 23, 0.8);
-  --barra-testo: #f5f5f7;
-  --ok: #248a3d;
-  --ko: #e30000;
-  --a: #0071e3;
-  --b: #f56300;
-  --c: #2b9a47;
-  --d: #8e44c9;
-  --raggio: 18px;
-}
+  --superficie: #f4f4f6;
+  --testo: #111114;
+  --testo-secondario: #6b6b74;
+  --accento: #2f5bea;
+  --giusto: #1f9d55;
+  --sbagliato: #d64545;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --sfondo: #000000;
-    --superficie: #1d1d1f;
-    --testo: #f5f5f7;
-    --tenue: #86868b;
-    --linea: #424245;
-    --link: #2997ff;
-    --ok: #30d158;
-    --ko: #ff453a;
-  }
+  --r0: #e5484d;   /* colori delle 4 risposte */
+  --r1: #2f5bea;
+  --r2: #e5a00d;
+  --r3: #1f9d55;
+
+  --raggio: 14px;
+  --spazio: 16px;
+  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 * { box-sizing: border-box; }
 
-html, body { margin: 0; min-height: 100%; }
+/* l'attributo hidden deve vincere anche sugli elementi con display: grid o flex */
+[hidden] { display: none !important; }
 
 body {
+  margin: 0;
+  font-family: var(--font);
   background: var(--sfondo);
   color: var(--testo);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 17px;
-  line-height: 1.47;
-  letter-spacing: -0.022em;
-  -webkit-font-smoothing: antialiased;
 }
 
-/* ---------- barra in alto ---------- */
+h1, h2, p { margin: 0 0 var(--spazio); }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.4rem; }
+
+/* ---------- struttura ---------- */
 
 .barra {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  height: 48px;
-  background: var(--barra);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  color: var(--barra-testo);
-}
-.barra-dentro {
-  max-width: 1024px;
-  height: 100%;
-  margin: 0 auto;
-  padding: 0 22px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  font-size: 12px;
-  letter-spacing: -0.01em;
-}
-.logo {
-  font-size: 19px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-.barra .info { color: rgba(245, 245, 247, 0.8); }
-
-/* ---------- impaginazione ---------- */
-
-.pagina {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 56px 22px 80px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-.pagina.stretta { max-width: 692px; }
-
-.eroe {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  padding: 12px var(--spazio);
+  border-bottom: 1px solid var(--superficie);
 }
+.logo { font-weight: 700; }
+.barra-info { color: var(--testo-secondario); font-size: 0.9rem; }
 
-.occhiello {
-  margin: 0;
-  font-size: 21px;
-  font-weight: 600;
-  color: var(--tenue);
-  letter-spacing: 0.011em;
+.contenuto {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: calc(var(--spazio) * 2) var(--spazio);
+  display: grid;
+  gap: calc(var(--spazio) * 1.5);
 }
+.contenuto.stretto { max-width: 520px; }
 
-h1, h2 { margin: 0; }
-h1 {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: clamp(32px, 5.5vw, 56px);
-  line-height: 1.07;
-  font-weight: 600;
-  letter-spacing: -0.005em;
-}
-h2 {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: clamp(24px, 3.4vw, 40px);
-  line-height: 1.1;
-  font-weight: 600;
-  letter-spacing: 0;
-}
-.sottotitolo {
-  margin: 0;
-  font-size: clamp(19px, 2.4vw, 24px);
-  line-height: 1.17;
-  letter-spacing: 0.009em;
-}
-
-.tenue { color: var(--tenue); }
-
-.tessera {
+.card {
   background: var(--superficie);
   border-radius: var(--raggio);
-  padding: 40px 32px;
-}
-@media (max-width: 560px) {
-  .tessera { padding: 28px 20px; }
-  .pagina { padding-top: 36px; }
+  padding: calc(var(--spazio) * 1.5);
 }
 
-/* ---------- bottoni e campi ---------- */
-
-button {
-  font: inherit;
-  letter-spacing: inherit;
-  cursor: pointer;
-  border: 0;
-  background: none;
-  color: inherit;
+.riga-spazio {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spazio);
+  flex-wrap: wrap;
 }
+.pulsanti { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- testi ---------- */
+
+.etichetta {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--testo-secondario);
+  margin-bottom: 6px;
+}
+.testo-secondario { color: var(--testo-secondario); }
+.errore { color: var(--sbagliato); min-height: 1.2em; }
+.indirizzo { font-size: 1.3rem; font-weight: 600; }
+.numero-grande { font-size: 3rem; font-weight: 700; }
+.giusto { color: var(--giusto); }
+.sbagliato { color: var(--sbagliato); }
+.tempo { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---------- controlli ---------- */
 
 .bottone {
-  display: inline-block;
-  background: var(--blu);
-  color: #fff;
-  font-size: 17px;
-  padding: 11px 22px;
-  border-radius: 980px;
-  transition: background 0.2s;
-}
-.bottone:hover { background: var(--blu-hover); }
-.bottone:disabled { opacity: 0.35; cursor: default; background: var(--blu); }
-.bottone.secondario {
-  background: transparent;
-  color: var(--link);
-  box-shadow: inset 0 0 0 1px var(--link);
-}
-.bottone.secondario:hover { background: var(--link); color: #fff; }
-.bottone.largo { width: 100%; padding: 15px 22px; }
-
-.azioni {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 14px;
-}
-
-input {
   font: inherit;
-  letter-spacing: inherit;
+  font-weight: 600;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 20px;
+  background: var(--accento);
+  color: #fff;
+  cursor: pointer;
+}
+.bottone.secondario { background: #fff; color: var(--testo); }
+.bottone.piccolo { padding: 6px 14px; font-size: 0.85rem; }
+
+.campo {
+  font: inherit;
   width: 100%;
-  padding: 16px 18px;
-  border-radius: 12px;
-  border: 1px solid var(--linea);
-  background: var(--sfondo);
-  color: var(--testo);
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  padding: 10px 12px;
+  border: 1px solid #d4d4da;
+  border-radius: 10px;
+  background: #fff;
 }
-input:focus {
-  border-color: var(--blu);
-  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.2);
-}
+.riga-form { display: flex; gap: 8px; }
+.campo-etichetta { display: grid; gap: 6px; font-weight: 600; }
 
-.modulo {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  max-width: 420px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-.nascosto { display: none !important; }
-
-/* ---------- risposte A B C D ---------- */
+/* ---------- risposte ---------- */
 
 .risposte {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 10px;
+  margin-bottom: var(--spazio);
 }
-@media (max-width: 560px) {
-  .risposte { grid-template-columns: 1fr; }
-}
-
 .risposta {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-height: 84px;
-  padding: 18px 22px;
+  font: inherit;
+  font-weight: 600;
+  min-height: 80px;
+  padding: 14px;
+  border: none;
   border-radius: var(--raggio);
   color: #fff;
-  font-size: 19px;
-  font-weight: 500;
   text-align: left;
-  transition: opacity 0.3s, transform 0.15s;
+  cursor: pointer;
 }
-button.risposta:hover { transform: scale(1.015); }
-button.risposta:active { transform: scale(0.98); }
-.risposta .lettera {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.22);
-  font-weight: 600;
-  font-size: 17px;
-}
-.risposta[data-i="0"] { background: var(--a); }
-.risposta[data-i="1"] { background: var(--b); }
-.risposta[data-i="2"] { background: var(--c); }
-.risposta[data-i="3"] { background: var(--d); }
+.risposta.r0 { background: var(--r0); }
+.risposta.r1 { background: var(--r1); }
+.risposta.r2 { background: var(--r2); }
+.risposta.r3 { background: var(--r3); }
+/* vero/falso: Vero verde, Falso rosso */
+.risposte.vf .r0 { background: var(--giusto); }
+.risposte.vf .r1 { background: var(--sbagliato); }
+
+.risposta:disabled { cursor: default; opacity: 0.4; }
+.risposta.scelta { opacity: 1; outline: 4px solid var(--testo); }
 .risposta.spenta { opacity: 0.25; }
-.risposta.giusta { box-shadow: 0 0 0 4px var(--sfondo), 0 0 0 7px var(--ok); }
-.risposta .conteggio { margin-left: auto; font-size: 24px; font-weight: 600; }
+.risposta.giusta { outline: 4px solid var(--testo); }
 
-/* ---------- tempo ---------- */
+/* ---------- liste ---------- */
 
-.riga-tempo {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.tempo {
-  flex: 1;
-  height: 4px;
-  border-radius: 99px;
-  background: var(--linea);
-  overflow: hidden;
-}
-.tempo div {
-  height: 100%;
-  width: 100%;
-  background: var(--testo);
-  transform-origin: left;
-}
-.secondi {
-  min-width: 2ch;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  font-size: 21px;
-}
+.chip-lista { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-lista li { background: #fff; padding: 6px 12px; border-radius: 999px; }
+.chip-lista li.scollegato { opacity: 0.4; }
 
-/* ---------- elenchi ---------- */
-
-.nomi {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.nomi li {
-  background: var(--sfondo);
-  border-radius: 980px;
-  padding: 8px 18px;
-  font-size: 17px;
-  animation: entra 0.4s ease-out;
-}
-@keyframes entra {
-  from { opacity: 0; transform: translateY(6px); }
-}
-
-.classifica {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
+.classifica { padding: 0; margin: 0; list-style: none; counter-reset: pos; display: grid; gap: 6px; }
 .classifica li {
+  counter-increment: pos;
   display: flex;
+  gap: 12px;
   align-items: center;
-  gap: 18px;
-  padding: 16px 4px;
-  border-bottom: 1px solid var(--linea);
-  font-size: 19px;
+  background: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
 }
-.classifica li:last-child { border-bottom: 0; }
-.classifica .pos {
-  width: 28px;
-  color: var(--tenue);
-  font-variant-numeric: tabular-nums;
+.classifica li::before { content: counter(pos); width: 1.5em; color: var(--testo-secondario); }
+.classifica li span { flex: 1; }
+.classifica li em { color: var(--giusto); font-style: normal; }
+.classifica li.io { outline: 2px solid var(--accento); }
+
+/* ---------- gestione domande ---------- */
+
+.form-domanda { display: grid; gap: 12px; margin-bottom: calc(var(--spazio) * 1.5); }
+.form-domanda .bottone { justify-self: start; }
+.opzioni { display: grid; gap: 8px; }
+.opzione { display: flex; align-items: center; gap: 10px; }
+
+.elenco-domande { padding-left: 1.2em; margin: 0; display: grid; gap: 10px; }
+.elenco-domande li > div { display: inline-block; width: calc(100% - 90px); vertical-align: top; }
+.elenco-domande li > button { float: right; }
+.elenco-domande p { margin-bottom: 4px; }
+.testo-domanda { font-weight: 600; }
+.badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  background: #fff;
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-bottom: 4px;
 }
-.classifica .punti {
-  margin-left: auto;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-.classifica li.offline { opacity: 0.45; }
 
-/* ---------- messaggi allo studente ---------- */
-
-.messaggio-grande {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 56px 24px;
-}
-.messaggio-grande .icona { font-size: 56px; line-height: 1; margin-bottom: 8px; }
-.ok { color: var(--ok); }
-.ko { color: var(--ko); }
-
-.errore { color: var(--ko); min-height: 1.4em; margin: 0; font-size: 14px; text-align: center; }
-
-.avviso {
-  text-align: center;
-  font-size: 14px;
-  color: var(--tenue);
+@media (max-width: 520px) {
+  h1 { font-size: 1.6rem; }
+  .risposte { grid-template-columns: 1fr; }
 }

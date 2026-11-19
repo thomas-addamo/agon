@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agon · Docente</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="barra">
+  <span class="logo">Agon</span>
+  <span class="barra-info">Docente</span>
+</header>
+
+<main class="contenuto">
+
+  <!-- ================= PARTITA ================= -->
+  <section class="card">
+    <div class="riga-spazio">
+      <div>
+        <p class="etichetta">Gli studenti entrano da</p>
+        <p id="indirizzo" class="indirizzo">…</p>
+      </div>
+      <div class="pulsanti">
+        <button id="avanti" class="bottone">Avvia il quiz</button>
+        <button id="ricomincia" class="bottone secondario">Ricomincia</button>
+      </div>
+    </div>
+    <p id="errore-partita" class="errore"></p>
+
+    <!-- sala d'attesa -->
+    <div id="palco-attesa">
+      <h2><span id="numero-giocatori">0</span> in sala</h2>
+      <ul id="giocatori" class="chip-lista"></ul>
+    </div>
+
+    <!-- domanda in corso / risultato -->
+    <div id="palco-domanda" hidden>
+      <div class="riga-spazio">
+        <p id="numero" class="etichetta"></p>
+        <p class="tempo"><span id="tempo"></span></p>
+      </div>
+      <h2 id="testo"></h2>
+      <div id="risposte" class="risposte"></div>
+      <p id="contatore" class="testo-secondario"></p>
+    </div>
+
+    <!-- classifica (dopo ogni domanda e alla fine) -->
+    <div id="palco-classifica" hidden>
+      <h2 id="titolo-classifica">Classifica</h2>
+      <ol id="classifica" class="classifica"></ol>
+    </div>
+  </section>
+
+  <!-- ================= DOMANDE ================= -->
+  <section class="card">
+    <h2>Domande</h2>
+
+    <form id="form-domanda" class="form-domanda">
+      <label class="campo-etichetta">Tipo
+        <select id="tipo" class="campo">
+          <option value="multipla">Risposta multipla</option>
+          <option value="vf">Vero o falso</option>
+        </select>
+      </label>
+
+      <label class="campo-etichetta">Domanda
+        <textarea id="testo-domanda" class="campo" rows="2" maxlength="200"></textarea>
+      </label>
+
+      <!-- risposta multipla: 4 risposte, il pallino indica quella giusta -->
+      <div id="campi-multipla" class="opzioni">
+        <label class="opzione"><input type="radio" name="corretta" value="0" checked><input class="campo testo-risposta" placeholder="Risposta 1"></label>
+        <label class="opzione"><input type="radio" name="corretta" value="1"><input class="campo testo-risposta" placeholder="Risposta 2"></label>
+        <label class="opzione"><input type="radio" name="corretta" value="2"><input class="campo testo-risposta" placeholder="Risposta 3"></label>
+        <label class="opzione"><input type="radio" name="corretta" value="3"><input class="campo testo-risposta" placeholder="Risposta 4"></label>
+      </div>
+
+      <!-- vero o falso: si sceglie solo quale delle due è giusta -->
+      <div id="campi-vf" class="opzioni" hidden>
+        <label class="opzione"><input type="radio" name="corretta-vf" value="0" checked> Vero</label>
+        <label class="opzione"><input type="radio" name="corretta-vf" value="1"> Falso</label>
+      </div>
+
+      <p class="testo-secondario">Seleziona il pallino accanto alla risposta giusta.</p>
+      <button class="bottone">Aggiungi domanda</button>
+      <p id="errore-domanda" class="errore"></p>
+    </form>
+
+    <ol id="elenco-domande" class="elenco-domande"></ol>
+  </section>
+
+</main>
+
+<script>
+  // =============================================================
+  //  PARTE 1 — la partita, con WebSocket
+  // =============================================================
+
+  // [WS] mi collego al server WebSocket e appena la connessione è aperta
+  // mi presento come docente
+  const webSocket = new WebSocket(location.origin.replace(/^http/, 'ws'));
+  webSocket.onopen = () => manda({ type: 'docente' });
+
+  function manda(msg) {
+    webSocket.send(JSON.stringify(msg));
+  }
+
+  const bottoneAvanti = document.getElementById('avanti');
+  let conto = null;
+
+  bottoneAvanti.addEventListener('click', () => {
+    document.getElementById('errore-partita').textContent = '';
+    manda({ type: 'avanti' });
+  });
+  document.getElementById('ricomincia').addEventListener('click', () => {
+    manda({ type: 'ricomincia' });
+  });
+
+  // mostra solo i riquadri indicati
+  function palco(attesa, domanda, classifica) {
+    document.getElementById('palco-attesa').hidden = !attesa;
+    document.getElementById('palco-domanda').hidden = !domanda;
+    document.getElementById('palco-classifica').hidden = !classifica;
+  }
+
+  function mostraClassifica(titolo, classifica) {
+    document.getElementById('titolo-classifica').textContent = titolo;
+    const lista = document.getElementById('classifica');
+    lista.innerHTML = '';
+    classifica.forEach((g) => {
+      const riga = document.createElement('li');
+      riga.innerHTML = '<span></span><em></em><strong></strong>';
+      riga.children[0].textContent = g.nome;
+      riga.children[1].textContent = g.guadagno > 0 ? '+' + g.guadagno : '';
+      riga.children[2].textContent = g.punti;
+      lista.appendChild(riga);
+    });
+  }
+
+  function mostraDomanda(data) {
+    document.getElementById('numero').textContent = 'Domanda ' + data.numero + ' di ' + data.totale;
+    document.getElementById('testo').textContent = data.testo;
+
+    const contenitore = document.getElementById('risposte');
+    contenitore.innerHTML = '';
+    contenitore.className = 'risposte ' + data.tipo;
+    data.risposte.forEach((risposta, i) => {
+      const div = document.createElement('div');
+      div.className = 'risposta r' + i;
+      div.textContent = risposta;
+      contenitore.appendChild(div);
+    });
+
+    let secondi = data.tempo;
+    const tempo = document.getElementById('tempo');
+    tempo.textContent = secondi;
+    clearInterval(conto);
+    conto = setInterval(() => {
+      secondi = Math.max(0, secondi - 1);
+      tempo.textContent = secondi;
+    }, 1000);
+
+    bottoneAvanti.textContent = 'Chiudi la domanda';
+    bottoneAvanti.hidden = false;
+    palco(false, true, false);
+  }
+
+  function mostraRisultato(data) {
+    clearInterval(conto);
+    document.getElementById('tempo').textContent = '';
+    // evidenzio la risposta giusta e spengo le altre
+    document.querySelectorAll('#risposte .risposta').forEach((div, i) => {
+      div.classList.add(i === data.corretta ? 'giusta' : 'spenta');
+    });
+    mostraClassifica('Classifica', data.classifica);
+    bottoneAvanti.textContent = data.ultima ? 'Vedi la classifica finale' : 'Prossima domanda';
+    palco(false, true, true);
+  }
+
+  // [WS] i messaggi dal server
+  webSocket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    if (data.type === 'errore') {
+      document.getElementById('errore-partita').textContent = data.testo;
+    }
+
+    if (data.type === 'giocatori') {
+      document.getElementById('numero-giocatori').textContent = data.giocatori.length;
+      const lista = document.getElementById('giocatori');
+      lista.innerHTML = '';
+      data.giocatori.forEach((g) => {
+        const li = document.createElement('li');
+        li.textContent = g.nome;
+        if (!g.collegato) li.className = 'scollegato';
+        lista.appendChild(li);
+      });
+    }
+
+    if (data.type === 'attesa') {
+      clearInterval(conto);
+      bottoneAvanti.textContent = 'Avvia il quiz';
+      bottoneAvanti.hidden = false;
+      palco(true, false, false);
+    }
+
+    if (data.type === 'domanda') mostraDomanda(data);
+
+    if (data.type === 'risposte') {
+      document.getElementById('contatore').textContent =
+        'Hanno risposto ' + data.date + ' su ' + data.totale;
+    }
+
+    if (data.type === 'risultato') mostraRisultato(data);
+
+    if (data.type === 'fine') {
+      clearInterval(conto);
+      mostraClassifica('Classifica finale', data.classifica);
+      bottoneAvanti.hidden = true;
+      palco(false, false, true);
+    }
+  };
+
+  webSocket.onclose = () => {
+    document.getElementById('errore-partita').textContent = 'Connessione con il server persa';
+  };
+
+  // =============================================================
+  //  PARTE 2 — le domande, con le API REST di Express
+  // =============================================================
+
+  // [JS] fetch fa una richiesta HTTP; con await aspetto la risposta
+  // senza bloccare la pagina (per questo la funzione è async)
+  async function caricaDomande() {
+    const risposta = await fetch('/domande');            // GET /domande
+    const domande = await risposta.json();
+
+    const lista = document.getElementById('elenco-domande');
+    lista.innerHTML = '';
+    domande.forEach((d) => {
+      const li = document.createElement('li');
+      li.innerHTML =
+        '<div><span class="badge"></span><p class="testo-domanda"></p><p class="testo-secondario"></p></div>' +
+        '<button class="bottone piccolo secondario">Elimina</button>';
+      li.querySelector('.badge').textContent = d.tipo === 'vf' ? 'Vero o falso' : 'Multipla';
+      li.querySelector('.testo-domanda').textContent = d.testo;
+      li.querySelector('.testo-secondario').textContent =
+        d.risposte.map((r, i) => (i === d.corretta ? '✓ ' + r : r)).join('  ·  ');
+      li.querySelector('button').addEventListener('click', () => eliminaDomanda(d.id));
+      lista.appendChild(li);
+    });
+  }
+
+  async function eliminaDomanda(id) {
+    await fetch('/domande/' + id, { method: 'DELETE' });  // DELETE /domande/:id
+    caricaDomande();
+  }
+
+  // cambiando tipo mostro i campi giusti
+  const tipo = document.getElementById('tipo');
+  tipo.addEventListener('change', () => {
+    document.getElementById('campi-multipla').hidden = tipo.value !== 'multipla';
+    document.getElementById('campi-vf').hidden = tipo.value !== 'vf';
+  });
+
+  document.getElementById('form-domanda').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const dati = {
+      tipo: tipo.value,
+      testo: document.getElementById('testo-domanda').value,
+    };
+    if (dati.tipo === 'multipla') {
+      dati.risposte = [...document.querySelectorAll('.testo-risposta')].map((campo) => campo.value);
+      dati.corretta = Number(document.querySelector('input[name="corretta"]:checked').value);
+    } else {
+      dati.corretta = Number(document.querySelector('input[name="corretta-vf"]:checked').value);
+    }
+
+    // POST /domande con i dati in JSON nel corpo della richiesta
+    const risposta = await fetch('/domande', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dati),
+    });
+
+    // se il server risponde 400 mostro il motivo, altrimenti svuoto il form
+    if (!risposta.ok) {
+      const errore = await risposta.json();
+      document.getElementById('errore-domanda').textContent = errore.errore;
+      return;
+    }
+    document.getElementById('errore-domanda').textContent = '';
+    document.getElementById('form-domanda').reset();
+    tipo.dispatchEvent(new Event('change'));
+    caricaDomande();
+  });
+
+  // indirizzo da proiettare per gli studenti
+  fetch('/indirizzo')
+    .then((risposta) => risposta.json())
+    .then((indirizzi) => {
+      document.getElementById('indirizzo').textContent = indirizzi[0] || location.origin;
+    });
+
+  caricaDomande();
+</script>
+</body>
+</html>

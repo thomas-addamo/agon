@@ -1,7 +1,7 @@
-# agon
+# Agon
 Agon — quiz live in classe con WebSocket (Node.js, Express, ws). Progetto TPSIT 5A INFO.
 
-Il docente proietta le domande, gli studenti rispondono dal telefono. Più si risponde in fretta, più punti si prendono.
+Il docente scrive le domande (a risposta multipla o vero/falso) e guida la partita; gli studenti entrano con il proprio nome e rispondono dal telefono. Più si risponde in fretta, più punti si prendono.
 
 ## Avvio
 
@@ -10,41 +10,58 @@ npm install
 npm start
 ```
 
-- Docente: `http://localhost:3000/host`
+- Docente: `http://localhost:3000/docente`
 - Studenti: l'indirizzo che compare sulla pagina del docente (es. `http://192.168.1.20:3000`), sulla stessa rete Wi-Fi.
 
-## Come funziona
-
-Stessa struttura degli esempi `ws_socket_00..07`: Express serve le pagine, `ws` gira sullo stesso server HTTP, tutti i messaggi sono oggetti JSON con un campo `tipo`.
+## Struttura
 
 | File | Cosa fa |
 |---|---|
-| `server.js` | Stato della partita, punteggi, invio dello stato a tutti |
-| `domande.json` | Le domande: `testo`, 4 `risposte`, indice `corretta`, `tempo` in secondi |
-| `public/host.html`, `host.js` | Pagina del docente |
-| `public/index.html`, `player.js` | Pagina dello studente |
-| `public/comune.js`, `style.css` | Funzioni e stile condivisi |
+| `server.js` | File principale: Express, middleware, rotte, avvio del WebSocket |
+| `rotte/domande.js` | API REST delle domande (Express Router) |
+| `moduli/archivio.js` | Legge e scrive `domande.json` (modulo `fs`) |
+| `moduli/partita.js` | Stato della partita, punteggi, classifica |
+| `moduli/websocket.js` | Server WebSocket con il modulo `ws` |
+| `public/index.html` | Pagina dello studente |
+| `public/docente.html` | Pagina del docente |
+| `public/style.css` | Stile |
 
-### Fasi
+Nei commenti del codice le etichette `[NODE]`, `[EXPRESS]`, `[WS]` e `[JS]` segnalano le conoscenze usate; l'elenco completo è in cima a `server.js`.
 
-`attesa` → `domanda` → `soluzione` → `classifica` → (domanda successiva …) → `fine`
+## Domande
 
-La domanda si chiude da sola allo scadere del tempo o quando hanno risposto tutti. Il docente può anche chiuderla prima.
+Stessa forma per i due tipi; il vero/falso è una domanda con le risposte `["Vero", "Falso"]`.
 
-### Messaggi
+```json
+{ "id": 1, "tipo": "multipla", "testo": "…", "risposte": ["A", "B", "C", "D"], "corretta": 2 }
+{ "id": 2, "tipo": "vf",       "testo": "…", "risposte": ["Vero", "Falso"],   "corretta": 0 }
+```
 
-Dal client al server:
-
-| tipo | chi | campi |
+| Metodo | Rotta | Cosa fa |
 |---|---|---|
-| `host` | docente | — |
-| `entra` | studente | `nome`, `id` (per rientrare dopo un refresh) |
-| `risposta` | studente | `scelta` (0–3) |
-| `avanti` | docente | — passa alla fase successiva |
-| `ricomincia` | docente | — azzera i punti e torna alla sala |
+| GET | `/domande` | elenco |
+| POST | `/domande` | aggiunge (JSON nel corpo); 400 se i dati non vanno bene |
+| DELETE | `/domande/:id` | elimina; 404 se non esiste |
 
-Dal server al client: `stato` (la situazione completa, diversa per docente e studente), `errore` (`testo`), `sostituito` (il docente ha aperto un'altra scheda).
+## Partita (WebSocket)
 
-### Punteggio
+Fasi: `attesa` → `domanda` → `risultato` → … → `fine`. Ogni domanda dura 20 secondi e si chiude prima se hanno risposto tutti o se il docente la chiude.
 
-Risposta giusta: da 1000 punti (subito) a 500 (allo scadere). Risposta sbagliata o nessuna risposta: 0.
+Tutti i messaggi sono JSON con un campo `type`.
+
+| Da → a | `type` | Campi |
+|---|---|---|
+| docente → server | `docente` | — |
+| docente → server | `avanti` | — avvia, chiude la domanda o passa alla successiva |
+| docente → server | `ricomincia` | — |
+| studente → server | `entra` | `nome` |
+| studente → server | `risposta` | `scelta` |
+| server → studente | `entrato` / `errore` | `nome` / `testo` |
+| server → tutti | `giocatori` | `giocatori` |
+| server → tutti | `attesa` | — |
+| server → tutti | `domanda` | `numero`, `totale`, `tipo`, `testo`, `risposte`, `tempo` (senza la risposta giusta) |
+| server → tutti | `risposte` | `date`, `totale` |
+| server → tutti | `risultato` | `corretta`, `ultima`, `classifica` |
+| server → tutti | `fine` | `classifica` |
+
+**Punteggio:** risposta giusta = 100 punti + 10 per ogni secondo rimasto; sbagliata o nessuna risposta = 0.
