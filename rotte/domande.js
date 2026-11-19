@@ -7,13 +7,20 @@
 //    DELETE /domande/:id  → elimina la domanda con quell'id
 //
 //  Le domande si gestiscono con HTTP, il quiz dal vivo con WebSocket.
+//  Tutte le rotte sono riservate ai docenti che hanno fatto il login.
 // =====================================================================
 
 const express = require('express');
 const archivio = require('../moduli/archivio');
+const utenti = require('../moduli/utenti');
 
 // [EXPRESS] express.Router() crea un gruppo di rotte da montare nell'app
 const router = express.Router();
+
+// [EXPRESS] router.use applica il middleware a TUTTE le rotte di questo Router:
+// senza login non si possono né leggere (contengono le risposte giuste!)
+// né modificare le domande
+router.use(utenti.richiediLogin);
 
 // [EXPRESS] rotta GET: res.json converte l'array in JSON e lo manda al browser
 router.get('/', (req, res) => {

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agon · Accesso docente</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="barra">
+  <span class="logo">Agon</span>
+  <span class="barra-info">Docente</span>
+</header>
+
+<main class="contenuto stretto">
+  <section class="card">
+    <p class="etichetta">Area docente</p>
+    <h1 id="titolo">Accedi</h1>
+
+    <form id="form-accesso" class="form-domanda">
+      <label class="campo-etichetta">Nome utente
+        <input id="utente" class="campo" autocomplete="username">
+      </label>
+      <label class="campo-etichetta">Password
+        <input id="password" class="campo" type="password" autocomplete="current-password">
+      </label>
+      <button id="invia" class="bottone">Accedi</button>
+      <p id="errore" class="errore"></p>
+    </form>
+
+    <p class="testo-secondario">
+      <span id="domanda-cambio">Non hai un account?</span>
+      <a href="#" id="cambia">Registrati</a>
+    </p>
+  </section>
+</main>
+
+<script>
+  // la pagina ha due modalità: 'login' e 'registrazione'
+  let modalita = 'login';
+
+  document.getElementById('cambia').addEventListener('click', (event) => {
+    event.preventDefault();
+    modalita = modalita === 'login' ? 'registrazione' : 'login';
+    const login = modalita === 'login';
+    document.getElementById('titolo').textContent = login ? 'Accedi' : 'Registrati';
+    document.getElementById('invia').textContent = login ? 'Accedi' : 'Crea account';
+    document.getElementById('domanda-cambio').textContent = login ? 'Non hai un account?' : 'Hai già un account?';
+    document.getElementById('cambia').textContent = login ? 'Registrati' : 'Accedi';
+    document.getElementById('errore').textContent = '';
+  });
+
+  // [JS] manda una richiesta POST con i dati in JSON e restituisce
+  // il codice di stato e la risposta del server già convertita in oggetto
+  async function post(indirizzo, dati) {
+    const risposta = await fetch(indirizzo, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dati),
+    });
+    return { ok: risposta.ok, dati: await risposta.json() };
+  }
+
+  document.getElementById('form-accesso').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const credenziali = {
+      utente: document.getElementById('utente').value,
+      password: document.getElementById('password').value,
+    };
+    const errore = document.getElementById('errore');
+
+    // registrazione: prima creo l'account, poi faccio subito il login
+    if (modalita === 'registrazione') {
+      const registrazione = await post('/utenti/registrazione', credenziali);
+      if (!registrazione.ok) {
+        errore.textContent = registrazione.dati.errore;
+        return;
+      }
+    }
+
+    const login = await post('/utenti/login', credenziali);
+    if (!login.ok) {
+      errore.textContent = login.dati.errore;
+      return;
+    }
+
+    // conservo il token nel browser e vado alla pagina del docente
+    localStorage.setItem('agon-token', login.dati.token);
+    localStorage.setItem('agon-docente', login.dati.utente);
+    location.href = '/docente';
+  });
+</script>
+</body>
+</html>

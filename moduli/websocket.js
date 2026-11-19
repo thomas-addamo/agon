@@ -4,20 +4,22 @@
 //  Tutti i messaggi sono oggetti JSON con un campo "type".
 //
 //  Dal client al server:
-//    { type: 'docente' }                 la pagina del docente si presenta
+//    { type: 'docente', token }          la pagina del docente si presenta con il token del login
 //    { type: 'entra', nome }             uno studente entra con il suo nome
 //    { type: 'risposta', scelta }        uno studente risponde (indice 0..3)
 //    { type: 'avanti' }                  (docente) avvia / chiudi domanda / prossima
 //    { type: 'ricomincia' }              (docente) torna alla sala d'attesa
 //
 //  Dal server ai client:
-//    entrato, errore, giocatori, attesa, domanda, risposte, risultato, fine
+//    entrato, errore, non-autorizzato, giocatori, attesa, domanda,
+//    risposte, risultato, fine
 // =====================================================================
 
 // [WS] dal modulo ws prendo la classe Server, come negli esercizi in classe
 const { Server } = require('ws');
 const archivio = require('./archivio');
 const partita = require('./partita');
+const utenti = require('./utenti');
 
 let ws_server;
 let quale = 0;        // contatore per dare un id a ogni client (come ws_socket_04)
@@ -125,8 +127,13 @@ function avviaWebSocket(server) {
       }
 
       if (arriva.type === 'docente') {
+        // solo chi ha fatto il login può comandare la partita
+        const utente = utenti.utenteDaToken(arriva.token);
+        if (utente === null) {
+          return manda(ws, { type: 'non-autorizzato' });
+        }
         ws.docente = true;
-        console.log('Il client ' + ws.id + ' è il docente');
+        console.log('Il client ' + ws.id + ' è il docente ' + utente);
         manda(ws, ultimoMessaggio);
         manda(ws, { type: 'giocatori', giocatori: partita.elencoGiocatori() });
         return;

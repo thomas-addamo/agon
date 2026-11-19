@@ -50,7 +50,9 @@ h2 { font-size: 1.4rem; }
   border-bottom: 1px solid var(--superficie);
 }
 .logo { font-weight: 700; }
-.barra-info { color: var(--testo-secondario); font-size: 0.9rem; }
+.barra-info { color: var(--testo-secondario); font-size: 0.9rem; display: flex; align-items: center; gap: 10px; }
+.barra-info .bottone { border: 1px solid #d4d4da; }
+a { color: var(--accento); }
 
 .contenuto {
   max-width: 900px;

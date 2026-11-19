@@ -10,7 +10,10 @@
 
 <header class="barra">
   <span class="logo">Agon</span>
-  <span class="barra-info">Docente</span>
+  <span class="barra-info">
+    <span id="nome-docente"></span>
+    <button id="esci" class="bottone piccolo secondario">Esci</button>
+  </span>
 </header>
 
 <main class="contenuto">
@@ -95,13 +98,44 @@
 
 <script>
   // =============================================================
+  //  PARTE 0 — login
+  // =============================================================
+
+  // il token arriva dalla pagina di login; senza token si torna lì
+  const token = localStorage.getItem('agon-token');
+  if (!token) location.href = '/login';
+
+  document.getElementById('nome-docente').textContent = localStorage.getItem('agon-docente');
+
+  function vaiAlLogin() {
+    localStorage.removeItem('agon-token');
+    localStorage.removeItem('agon-docente');
+    location.href = '/login';
+  }
+
+  document.getElementById('esci').addEventListener('click', async () => {
+    await fetch('/utenti/logout', { method: 'POST', headers: { Authorization: token } });
+    vaiAlLogin();
+  });
+
+  // [JS] fetch verso le API protette: aggiungo sempre il token nell'intestazione
+  // Authorization. Se il server risponde 401 il token non vale più (per esempio
+  // il server è stato riavviato) e torno al login.
+  async function api(indirizzo, opzioni = {}) {
+    opzioni.headers = Object.assign({ Authorization: token }, opzioni.headers);
+    const risposta = await fetch(indirizzo, opzioni);
+    if (risposta.status === 401) vaiAlLogin();
+    return risposta;
+  }
+
+  // =============================================================
   //  PARTE 1 — la partita, con WebSocket
   // =============================================================
 
   // [WS] mi collego al server WebSocket e appena la connessione è aperta
-  // mi presento come docente
+  // mi presento come docente mandando il token del login
   const webSocket = new WebSocket(location.origin.replace(/^http/, 'ws'));
-  webSocket.onopen = () => manda({ type: 'docente' });
+  webSocket.onopen = () => manda({ type: 'docente', token: token });
 
   function manda(msg) {
     webSocket.send(JSON.stringify(msg));
@@ -183,6 +217,8 @@
   webSocket.onmessage = (event) => {
     const data = JSON.parse(event.data);
 
+    if (data.type === 'non-autorizzato') vaiAlLogin();
+
     if (data.type === 'errore') {
       document.getElementById('errore-partita').textContent = data.testo;
     }
@@ -234,7 +270,7 @@
   // [JS] fetch fa una richiesta HTTP; con await aspetto la risposta
   // senza bloccare la pagina (per questo la funzione è async)
   async function caricaDomande() {
-    const risposta = await fetch('/domande');            // GET /domande
+    const risposta = await api('/domande');              // GET /domande
     const domande = await risposta.json();
 
     const lista = document.getElementById('elenco-domande');
@@ -254,7 +290,7 @@
   }
 
   async function eliminaDomanda(id) {
-    await fetch('/domande/' + id, { method: 'DELETE' });  // DELETE /domande/:id
+    await api('/domande/' + id, { method: 'DELETE' });    // DELETE /domande/:id
     caricaDomande();
   }
 
@@ -280,7 +316,7 @@
     }
 
     // POST /domande con i dati in JSON nel corpo della richiesta
-    const risposta = await fetch('/domande', {
+    const risposta = await api('/domande', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dati),

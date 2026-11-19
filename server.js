@@ -11,16 +11,20 @@
 //  STRUTTURA DEL PROGETTO
 //    server.js              → file principale (questo)
 //    rotte/domande.js       → API REST per gestire le domande (Express Router)
+//    rotte/utenti.js        → registrazione, login e logout dei docenti
 //    moduli/archivio.js     → lettura e scrittura di domande.json (modulo fs)
+//    moduli/utenti.js       → docenti in docenti.json, token, middleware di login
 //    moduli/partita.js      → stato della partita, punteggi e classifica
 //    moduli/websocket.js    → server WebSocket con il modulo ws
 //    public/                → pagine HTML e foglio di stile
 //
 //  CONOSCENZE USATE (cercare le etichette nei commenti)
-//    [NODE]     require e module.exports, moduli fs, path e os, process
+//    [NODE]     require e module.exports, moduli fs, path, os e crypto, process
 //    [EXPRESS]  app, middleware (anche scritti da noi), express.json,
 //               express.static, Router, rotte GET/POST/DELETE, req.params,
-//               req.body, res.json, res.status, res.sendFile, pagina 404
+//               req.body, req.get (intestazioni), res.json, res.status,
+//               res.sendFile, middleware di login su router e su singola rotta,
+//               pagina 404
 //    [WS]       Server di ws, evento connection, message e close,
 //               ws.send, ws_server.clients, broadcast, messaggi JSON con type
 //    [JS]       oggetti e array, JSON.stringify e JSON.parse, setTimeout,
@@ -32,6 +36,7 @@
 const express = require('express');
 const os = require('os');
 const rotteDomande = require('./rotte/domande');
+const rotteUtenti = require('./rotte/utenti');
 const avviaWebSocket = require('./moduli/websocket');
 
 // [NODE] process.env legge le variabili d'ambiente: se PORT non c'è uso la 3000
@@ -75,9 +80,13 @@ const server = express()
   // [EXPRESS] monto il Router delle domande: tutte le sue rotte
   // iniziano con /domande (vedi rotte/domande.js)
   .use('/domande', rotteDomande)
+  .use('/utenti', rotteUtenti)
 
-  // [EXPRESS] rotta GET: la pagina del docente, mandata con res.sendFile
+  // [EXPRESS] rotte GET: le pagine del docente, mandate con res.sendFile.
+  // La pagina /docente se non trova il token rimanda da sola a /login;
+  // i dati veri (domande e comandi del quiz) sono comunque protetti dal server.
   .get('/docente', (req, res) => res.sendFile('/public/docente.html', { root: __dirname }))
+  .get('/login', (req, res) => res.sendFile('/public/login.html', { root: __dirname }))
 
   // [EXPRESS] rotta GET che risponde in JSON: gli indirizzi da mostrare agli studenti
   .get('/indirizzo', (req, res) => res.json(indirizziRete()))
