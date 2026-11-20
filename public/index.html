@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Agon</title>
 <link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:,">
 </head>
 <body>
 
@@ -15,52 +16,86 @@
 
 <main class="contenuto stretto">
 
-  <!-- 1. lo studente scrive il nome -->
+  <!-- 1. lo studente scrive il PIN della partita e il suo nome -->
   <section id="schermata-nome" class="schermata">
-    <p class="etichetta">Quiz live</p>
-    <h1>Come ti chiami?</h1>
-    <form id="form-nome" class="riga-form">
-      <input id="campo-nome" class="campo" maxlength="20" placeholder="Il tuo nome" autocomplete="off">
-      <button class="bottone">Entra</button>
+    <div class="intestazione">
+      <p class="etichetta">Quiz live</p>
+      <h1>Entra nella partita</h1>
+    </div>
+    <form id="form-nome" class="form-domanda">
+      <label class="campo-etichetta">PIN
+        <input id="campo-pin" class="campo campo-pin" inputmode="numeric" maxlength="7" placeholder="000000" autocomplete="off">
+      </label>
+      <label class="campo-etichetta">Il tuo nome
+        <input id="campo-nome" class="campo" maxlength="20" placeholder="Come ti chiami?" autocomplete="off">
+      </label>
+      <button class="bottone grande">Entra</button>
     </form>
     <p id="errore" class="errore"></p>
   </section>
 
   <!-- 2. sala d'attesa -->
   <section id="schermata-attesa" class="schermata" hidden>
-    <p class="etichetta">Sei dentro</p>
-    <h1>Aspetta il docente</h1>
+    <div class="intestazione">
+      <p class="etichetta">Sei dentro · <span id="nome-quiz"></span></p>
+      <h1>Aspetta il docente</h1>
+    </div>
+    <div class="onda grande" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
     <p class="testo-secondario">Il quiz parte quando il docente lo avvia.</p>
-    <p id="in-sala" class="testo-secondario"></p>
+    <p class="testo-secondario"><span id="in-sala" class="conteggio">1</span> in sala</p>
   </section>
 
   <!-- 3. domanda in corso -->
   <section id="schermata-domanda" class="schermata" hidden>
-    <div class="riga-spazio">
-      <p id="numero" class="etichetta"></p>
-      <p id="tempo" class="tempo"></p>
+    <div class="timer" id="timer">
+      <div class="riga-spazio">
+        <p id="numero" class="etichetta"></p>
+        <span id="tempo" class="timer-numero"></span>
+      </div>
+      <div class="timer-barra"><span></span></div>
     </div>
-    <h2 id="testo"></h2>
+    <h2 id="testo" class="t-domanda"></h2>
     <div id="risposte" class="risposte"></div>
-    <p id="inviata" class="testo-secondario" hidden>Risposta inviata, aspetta gli altri…</p>
+    <p id="inviata" class="in-attesa" hidden>
+      <span class="onda piccola" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+      Risposta inviata, aspetta gli altri
+    </p>
   </section>
 
   <!-- 4. risultato della domanda -->
   <section id="schermata-risultato" class="schermata" hidden>
-    <h1 id="esito"></h1>
-    <p id="guadagno" class="numero-grande"></p>
-    <p id="posizione" class="testo-secondario"></p>
+    <div id="esito" class="esito">
+      <p id="esito-titolo" class="esito-titolo"></p>
+      <p id="guadagno" class="esito-punti"></p>
+      <p id="posizione" class="esito-posizione"></p>
+    </div>
+    <ol id="classifica-parziale" class="classifica"></ol>
   </section>
 
   <!-- 5. fine del quiz -->
   <section id="schermata-fine" class="schermata" hidden>
-    <p class="etichetta">Quiz finito</p>
-    <h1 id="finale"></h1>
+    <div class="intestazione">
+      <p class="etichetta">Quiz finito</p>
+      <h1 id="finale"></h1>
+    </div>
+    <div id="podio" class="podio"></div>
     <ol id="classifica" class="classifica"></ol>
+  </section>
+
+  <!-- 6. il docente ha chiuso la partita -->
+  <section id="schermata-chiusa" class="schermata" hidden>
+    <div class="intestazione">
+      <p class="etichetta">Partita chiusa</p>
+      <h1>Il docente ha chiuso la partita</h1>
+    </div>
+    <p class="testo-secondario">Per giocare ancora ti serve il PIN di una nuova partita.</p>
+    <button class="bottone" onclick="location.href = '/'">Entra in un'altra partita</button>
   </section>
 
 </main>
 
+<!-- animazioni condivise: coriandoli, numeri che salgono, classifica e podio -->
+<script src="effetti.js"></script>
 <script>
   // [WS] mi collego al server WebSocket: stesso indirizzo della pagina,
   // con ws:// al posto di http:// (come negli esercizi in classe)
@@ -85,9 +120,17 @@
   // il nome usato l'ultima volta, così dopo un refresh basta premere Entra
   try { document.getElementById('campo-nome').value = localStorage.getItem('agon-nome') || ''; } catch {}
 
+  // [JS] il PIN può arrivare anche nell'indirizzo: /?pin=482913
+  const pinIndirizzo = new URLSearchParams(location.search).get('pin');
+  if (pinIndirizzo) document.getElementById('campo-pin').value = pinIndirizzo;
+
   document.getElementById('form-nome').addEventListener('submit', (event) => {
     event.preventDefault();   // il form non deve ricaricare la pagina
-    manda({ type: 'entra', nome: document.getElementById('campo-nome').value });
+    manda({
+      type: 'entra',
+      pin: document.getElementById('campo-pin').value,
+      nome: document.getElementById('campo-nome').value,
+    });
   });
 
   // ---------------------------------------------------------------
@@ -106,11 +149,12 @@
     contenitore.className = 'risposte ' + data.tipo;
     data.risposte.forEach((risposta, i) => {
       const bottone = document.createElement('button');
-      bottone.className = 'risposta r' + i;
-      bottone.textContent = risposta;
+      bottone.className = 'risposta r' + i + (risposta.length > 24 ? ' lunga' : '');   // testo lungo: carattere più piccolo
+      bottone.textContent = puntiACapo(risposta);
       bottone.addEventListener('click', () => {
         miaScelta = i;
         manda({ type: 'risposta', scelta: i });
+        vibra(30);
         contenitore.querySelectorAll('button').forEach((b) => (b.disabled = true));
         bottone.classList.add('scelta');
         document.getElementById('inviata').hidden = false;
@@ -118,59 +162,79 @@
       contenitore.appendChild(bottone);
     });
 
-    // conto alla rovescia solo da mostrare: il tempo vero lo decide il server
-    let secondi = data.tempo;
-    const tempo = document.getElementById('tempo');
-    tempo.textContent = secondi;
+    avviaTimer(data.tempo);
+    mostra('domanda');
+  }
+
+  // Conto alla rovescia solo da mostrare: il tempo vero lo decide il server.
+  // Ogni secondo aggiorno il numero e la variabile CSS --resto (da 1 a 0),
+  // che decide la lunghezza della barra; negli ultimi 5 secondi diventa rosso.
+  function avviaTimer(totale) {
+    const timer = document.getElementById('timer');
+    const numero = document.getElementById('tempo');
+    const barra = timer.querySelector('.timer-barra > span');
+    let secondi = totale;
+    function disegna() {
+      numero.textContent = secondi;
+      timer.style.setProperty('--resto', secondi / totale);
+      timer.classList.toggle('ultimi', secondi <= 5);
+      if (secondi > 5) ripeti(numero, 'tic');   // piccolo scatto a ogni secondo
+    }
     clearInterval(conto);
+    // la barra deve tornare piena di colpo, non con la transizione
+    barra.style.transition = 'none';
+    disegna();
+    void barra.offsetWidth;
+    barra.style.transition = '';
     conto = setInterval(() => {
       secondi = Math.max(0, secondi - 1);
-      tempo.textContent = secondi;
+      disegna();
     }, 1000);
-
-    mostra('domanda');
   }
 
   function mostraRisultato(data) {
     clearInterval(conto);
     const esito = document.getElementById('esito');
+    const titolo = document.getElementById('esito-titolo');
     if (miaScelta === null) {
-      esito.textContent = 'Tempo scaduto';
-      esito.className = 'sbagliato';
+      titolo.textContent = 'Tempo scaduto';
+      esito.className = 'esito scaduto';
     } else if (miaScelta === data.corretta) {
-      esito.textContent = 'Giusto!';
-      esito.className = 'giusto';
+      titolo.textContent = 'Giusto!';
+      esito.className = 'esito giusto';
     } else {
-      esito.textContent = 'Sbagliato';
-      esito.className = 'sbagliato';
+      titolo.textContent = 'Sbagliato';
+      esito.className = 'esito sbagliato';
     }
 
-    // [JS] cerco la mia riga in classifica con find e la posizione con findIndex
+    // [JS] cerco la mia riga in classifica con findIndex
     const posizione = data.classifica.findIndex((g) => g.nome === mioNome);
     const io = data.classifica[posizione];
-    document.getElementById('guadagno').textContent = '+' + io.guadagno;
     document.getElementById('posizione').textContent =
       'Sei ' + (posizione + 1) + '° con ' + io.punti + ' punti';
     mostra('risultato');
+    disegnaClassifica(document.getElementById('classifica-parziale'), data.classifica, mioNome);
+
+    // i punti salgono da 0; se ho risposto giusto coriandoli e doppia vibrazione
+    contaSu(document.getElementById('guadagno'), 0, io.guadagno, 900, '+');
+    if (miaScelta === data.corretta) {
+      coriandoli();
+      vibra([40, 60, 40]);
+    } else {
+      vibra(200);
+    }
   }
 
   function mostraFine(data) {
     clearInterval(conto);
     const posizione = data.classifica.findIndex((g) => g.nome === mioNome);
     document.getElementById('finale').textContent =
-      'Sei arrivato ' + (posizione + 1) + '° su ' + data.classifica.length;
+      posizione === 0 ? 'Hai vinto!' : 'Sei arrivato ' + (posizione + 1) + '° su ' + data.classifica.length;
 
-    const lista = document.getElementById('classifica');
-    lista.innerHTML = '';
-    data.classifica.forEach((g) => {
-      const riga = document.createElement('li');
-      if (g.nome === mioNome) riga.className = 'io';
-      riga.innerHTML = '<span></span><strong></strong>';
-      riga.children[0].textContent = g.nome;   // textContent: il nome non viene letto come HTML
-      riga.children[1].textContent = g.punti;
-      lista.appendChild(riga);
-    });
     mostra('fine');
+    disegnaPodio(document.getElementById('podio'), data.classifica);
+    dimenticaClassifica();
+    disegnaClassifica(document.getElementById('classifica'), data.classifica, mioNome);
   }
 
   // ---------------------------------------------------------------
@@ -183,6 +247,7 @@
 
     if (data.type === 'errore') {
       document.getElementById('errore').textContent = data.testo;
+      scuoti(document.getElementById('form-nome'));
       return;
     }
 
@@ -190,6 +255,7 @@
       mioNome = data.nome;
       try { localStorage.setItem('agon-nome', mioNome); } catch {}
       document.getElementById('chi').textContent = mioNome;
+      document.getElementById('nome-quiz').textContent = data.quiz;
       return;
     }
 
@@ -197,12 +263,21 @@
     if (mioNome === null) return;
 
     if (data.type === 'giocatori') {
-      document.getElementById('in-sala').textContent = data.giocatori.length + ' in sala';
+      const inSala = document.getElementById('in-sala');
+      if (inSala.textContent !== String(data.giocatori.length)) ripeti(inSala, 'tic');
+      inSala.textContent = data.giocatori.length;
     }
-    if (data.type === 'attesa') mostra('attesa');
+    if (data.type === 'attesa') {
+      dimenticaClassifica();
+      mostra('attesa');
+    }
     if (data.type === 'domanda') mostraDomanda(data);
     if (data.type === 'risultato') mostraRisultato(data);
     if (data.type === 'fine') mostraFine(data);
+    if (data.type === 'chiusa') {
+      clearInterval(conto);
+      mostra('chiusa');
+    }
   };
 
   // [WS] onclose: il server è stato spento o la rete è caduta

@@ -2,31 +2,33 @@
 //  AGON — quiz live in classe con WebSocket
 //  Progetto TPSIT 5A INFO
 //
-//  Il docente scrive le domande e guida la partita da /docente,
-//  gli studenti entrano con il proprio nome da / e rispondono dal telefono.
+//  I docenti creano i quiz e li avviano da /docente: ogni quiz avviato
+//  diventa una partita con un PIN. Gli studenti entrano da / con PIN e
+//  nome e rispondono dal telefono. Più partite possono girare insieme.
 //
 //  Questo è il file principale: crea il server Express, monta le rotte
 //  e avvia il server WebSocket sullo stesso server HTTP.
 //
 //  STRUTTURA DEL PROGETTO
 //    server.js              → file principale (questo)
-//    rotte/domande.js       → API REST per gestire le domande (Express Router)
+//    rotte/quiz.js          → API REST per gestire i quiz (Express Router)
 //    rotte/utenti.js        → registrazione, login e logout dei docenti
-//    moduli/archivio.js     → lettura e scrittura di domande.json (modulo fs)
+//    moduli/archivio.js     → lettura e scrittura di quiz.json (modulo fs)
 //    moduli/utenti.js       → docenti in docenti.json, token, middleware di login
-//    moduli/partita.js      → stato della partita, punteggi e classifica
+//    moduli/partita.js      → partite in corso con il loro PIN, punteggi e classifica
 //    moduli/websocket.js    → server WebSocket con il modulo ws
-//    public/                → pagine HTML e foglio di stile
+//    public/                → pagine HTML, foglio di stile ed effetti animati
 //
 //  CONOSCENZE USATE (cercare le etichette nei commenti)
 //    [NODE]     require e module.exports, moduli fs, path, os e crypto, process
 //    [EXPRESS]  app, middleware (anche scritti da noi), express.json,
-//               express.static, Router, rotte GET/POST/DELETE, req.params,
+//               express.static, Router, rotte GET/POST/PUT/DELETE, req.params,
 //               req.body, req.get (intestazioni), res.json, res.status,
 //               res.sendFile, middleware di login su router e su singola rotta,
-//               pagina 404
+//               codici 400/401/403/404, pagina 404
 //    [WS]       Server di ws, evento connection, message e close,
-//               ws.send, ws_server.clients, broadcast, messaggi JSON con type
+//               ws.send, ws_server.clients, broadcast filtrato per PIN,
+//               proprietà salvate sul socket (ws.pin, ws.nome), messaggi JSON con type
 //    [JS]       oggetti e array, JSON.stringify e JSON.parse, setTimeout,
 //               metodi degli array (find, filter, map, sort, forEach)
 // =====================================================================
@@ -35,7 +37,7 @@
 // os fa parte di Node, gli altri sono file scritti da noi (percorso con ./)
 const express = require('express');
 const os = require('os');
-const rotteDomande = require('./rotte/domande');
+const rotteQuiz = require('./rotte/quiz');
 const rotteUtenti = require('./rotte/utenti');
 const avviaWebSocket = require('./moduli/websocket');
 
@@ -77,15 +79,19 @@ const server = express()
   // (index.html, style.css...). __dirname è la cartella di questo file.
   .use(express.static(__dirname + '/public'))
 
-  // [EXPRESS] monto il Router delle domande: tutte le sue rotte
-  // iniziano con /domande (vedi rotte/domande.js)
-  .use('/domande', rotteDomande)
+  // [EXPRESS] monto i Router: tutte le rotte di rotte/quiz.js iniziano
+  // con /quiz, quelle di rotte/utenti.js con /utenti
+  .use('/quiz', rotteQuiz)
   .use('/utenti', rotteUtenti)
 
   // [EXPRESS] rotte GET: le pagine del docente, mandate con res.sendFile.
-  // La pagina /docente se non trova il token rimanda da sola a /login;
-  // i dati veri (domande e comandi del quiz) sono comunque protetti dal server.
+  //   /docente  → elenco dei quiz      /editor  → crea o modifica un quiz
+  //   /conduci  → la partita da proiettare, con il PIN
+  // Se non trovano il token rimandano da sole a /login; i dati veri
+  // (quiz e comandi della partita) sono comunque protetti dal server.
   .get('/docente', (req, res) => res.sendFile('/public/docente.html', { root: __dirname }))
+  .get('/editor', (req, res) => res.sendFile('/public/editor.html', { root: __dirname }))
+  .get('/conduci', (req, res) => res.sendFile('/public/conduci.html', { root: __dirname }))
   .get('/login', (req, res) => res.sendFile('/public/login.html', { root: __dirname }))
 
   // [EXPRESS] rotta GET che risponde in JSON: gli indirizzi da mostrare agli studenti

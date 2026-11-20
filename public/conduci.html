@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<!-- data-theme="light": la partita va al proiettore, sempre in tema chiaro -->
+<html lang="it" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agon · Partita</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:,">
+</head>
+<body>
+
+<header class="barra">
+  <span class="logo">Agon</span>
+  <span class="barra-info">
+    <span id="nome-docente"></span>
+    <button id="esci" class="bottone piccolo secondario">Esci</button>
+  </span>
+</header>
+
+<main class="contenuto">
+
+  <!-- ================= COME ENTRARE ================= -->
+  <section class="card ingresso">
+    <div class="intestazione">
+      <p class="etichetta"><a href="/docente">← Chiudi la partita</a> · <span id="nome-quiz"></span></p>
+      <p class="t-corpo">Vai su <strong id="indirizzo" class="t-cifre">…</strong> e scrivi il PIN</p>
+    </div>
+    <div id="pin" class="pin" aria-label="PIN della partita"></div>
+  </section>
+
+  <!-- ================= PARTITA ================= -->
+  <section class="card">
+    <div class="riga-spazio">
+      <p id="stato" class="etichetta">Sala d'attesa</p>
+      <div class="pulsanti">
+        <button id="avanti" class="bottone grande">Avvia il quiz</button>
+        <button id="ricomincia" class="bottone secondario">Ricomincia</button>
+      </div>
+    </div>
+    <p id="errore-partita" class="errore"></p>
+
+    <!-- sala d'attesa -->
+    <div id="palco-attesa" class="palco">
+      <h2><span id="numero-giocatori" class="conteggio">0</span> in sala</h2>
+      <p id="sala-vuota" class="in-attesa">
+        <span class="onda" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+        In attesa degli studenti
+      </p>
+      <ul id="giocatori" class="giocatori"></ul>
+    </div>
+
+    <!-- domanda in corso / risultato -->
+    <div id="palco-domanda" class="palco" hidden>
+      <div class="palco-domanda">
+        <div class="intestazione">
+          <p id="numero" class="etichetta"></p>
+          <h2 id="testo" class="t-domanda"></h2>
+        </div>
+        <div class="timer" id="timer">
+          <span id="tempo" class="timer-numero"></span>
+          <div class="timer-barra"><span></span></div>
+        </div>
+      </div>
+      <div id="risposte" class="risposte proiezione"></div>
+      <div class="intestazione">
+        <p id="contatore" class="testo-secondario"></p>
+        <div id="progresso" class="barra-progresso"><span></span></div>
+      </div>
+    </div>
+
+    <!-- classifica (dopo ogni domanda e alla fine) -->
+    <div id="palco-classifica" class="palco" hidden>
+      <h2 id="titolo-classifica">Classifica</h2>
+      <div id="podio" class="podio" hidden></div>
+      <ol id="classifica" class="classifica"></ol>
+    </div>
+  </section>
+
+</main>
+
+<!-- effetti.js: coriandoli, numeri che salgono, classifica e podio; sessione.js: login del docente -->
+<script src="effetti.js"></script>
+<script src="sessione.js"></script>
+<script>
+  // [JS] URLSearchParams legge i parametri dell'indirizzo: /conduci?quiz=3
+  const idQuiz = new URLSearchParams(location.search).get('quiz');
+
+  // [WS] mi collego al server WebSocket e appena la connessione è aperta
+  // chiedo di creare una partita con il quiz scelto, mandando il token del login.
+  // Se questa pagina si chiude (o si ricarica) la partita finisce per tutti.
+  const webSocket = new WebSocket(location.origin.replace(/^http/, 'ws'));
+  webSocket.onopen = () => manda({ type: 'crea', token: token, quiz: idQuiz });
+
+  function manda(msg) {
+    webSocket.send(JSON.stringify(msg));
+  }
+
+  const bottoneAvanti = document.getElementById('avanti');
+  let conto = null;
+  let giaInSala = [];   // nomi già visti in sala: solo i nuovi entrano con l'animazione
+
+  bottoneAvanti.addEventListener('click', () => {
+    document.getElementById('errore-partita').textContent = '';
+    manda({ type: 'avanti' });
+  });
+  document.getElementById('ricomincia').addEventListener('click', () => {
+    manda({ type: 'ricomincia' });
+  });
+
+  // mostra solo i riquadri indicati
+  function palco(attesa, domanda, classifica) {
+    document.getElementById('palco-attesa').hidden = !attesa;
+    document.getElementById('palco-domanda').hidden = !domanda;
+    document.getElementById('palco-classifica').hidden = !classifica;
+  }
+
+  // il PIN in cifre grandi, una tessera per cifra
+  function mostraPin(pin) {
+    const contenitore = document.getElementById('pin');
+    contenitore.innerHTML = '';
+    pin.split('').forEach((cifra, i) => {
+      const span = document.createElement('span');
+      span.textContent = cifra;
+      span.style.setProperty('--i', i);
+      contenitore.appendChild(span);
+    });
+  }
+
+  // Conto alla rovescia solo da mostrare (il tempo vero lo decide il server):
+  // aggiorna il numero e la variabile CSS --resto che accorcia la barra
+  function avviaTimer(totale) {
+    const timer = document.getElementById('timer');
+    const numero = document.getElementById('tempo');
+    const barra = timer.querySelector('.timer-barra > span');
+    let secondi = totale;
+    function disegna() {
+      numero.textContent = secondi;
+      timer.style.setProperty('--resto', secondi / totale);
+      timer.classList.toggle('ultimi', secondi <= 5);
+      if (secondi > 5) ripeti(numero, 'tic');
+    }
+    clearInterval(conto);
+    barra.style.transition = 'none';   // la barra torna piena di colpo
+    disegna();
+    void barra.offsetWidth;
+    barra.style.transition = '';
+    conto = setInterval(() => {
+      secondi = Math.max(0, secondi - 1);
+      disegna();
+    }, 1000);
+  }
+
+  function mostraDomanda(data) {
+    document.getElementById('stato').textContent = 'Domanda in corso';
+    document.getElementById('numero').textContent = 'Domanda ' + data.numero + ' di ' + data.totale;
+    document.getElementById('testo').textContent = data.testo;
+
+    const contenitore = document.getElementById('risposte');
+    contenitore.innerHTML = '';
+    // "proiezione": tessere più grandi, da leggere dal fondo dell'aula
+    contenitore.className = 'risposte proiezione ' + data.tipo;
+    data.risposte.forEach((risposta, i) => {
+      const div = document.createElement('div');
+      div.className = 'risposta r' + i + (risposta.length > 24 ? ' lunga' : '');   // testo lungo: carattere più piccolo
+      div.textContent = puntiACapo(risposta);
+      contenitore.appendChild(div);
+    });
+
+    avviaTimer(data.tempo);
+    document.getElementById('timer').hidden = false;
+    document.getElementById('podio').hidden = true;
+    bottoneAvanti.textContent = 'Chiudi la domanda';
+    bottoneAvanti.hidden = false;
+    palco(false, true, false);
+  }
+
+  function mostraRisultato(data) {
+    clearInterval(conto);
+    document.getElementById('stato').textContent = 'Risultato';
+    document.getElementById('timer').hidden = true;
+    // evidenzio la risposta giusta e spengo le altre
+    document.querySelectorAll('#risposte .risposta').forEach((div, i) => {
+      div.classList.add(i === data.corretta ? 'giusta' : 'spenta');
+    });
+    document.getElementById('titolo-classifica').textContent = 'Classifica';
+    disegnaClassifica(document.getElementById('classifica'), data.classifica);
+    bottoneAvanti.textContent = data.ultima ? 'Vedi la classifica finale' : 'Prossima domanda';
+    palco(false, true, true);
+  }
+
+  // [WS] i messaggi dal server
+  webSocket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    if (data.type === 'non-autorizzato') vaiAlLogin();
+
+    if (data.type === 'creata') {
+      document.getElementById('nome-quiz').textContent = data.nome;
+      document.title = 'Agon · ' + data.nome;
+      mostraPin(data.pin);
+    }
+
+    if (data.type === 'errore') {
+      document.getElementById('errore-partita').textContent = data.testo;
+      scuoti(bottoneAvanti);
+    }
+
+    if (data.type === 'giocatori') {
+      const numero = document.getElementById('numero-giocatori');
+      if (numero.textContent !== String(data.giocatori.length)) ripeti(numero, 'tic');
+      numero.textContent = data.giocatori.length;
+      document.getElementById('sala-vuota').hidden = data.giocatori.length > 0;
+
+      const lista = document.getElementById('giocatori');
+      lista.innerHTML = '';
+      data.giocatori.forEach((g) => {
+        const li = document.createElement('li');
+        li.textContent = g.nome;
+        if (!g.collegato) li.classList.add('scollegato');
+        if (!giaInSala.includes(g.nome)) li.classList.add('nuovo');   // entra con un "pop"
+        lista.appendChild(li);
+      });
+      giaInSala = data.giocatori.map((g) => g.nome);
+    }
+
+    if (data.type === 'attesa') {
+      clearInterval(conto);
+      dimenticaClassifica();
+      document.getElementById('stato').textContent = "Sala d'attesa";
+      bottoneAvanti.textContent = 'Avvia il quiz';
+      bottoneAvanti.hidden = false;
+      palco(true, false, false);
+    }
+
+    if (data.type === 'domanda') mostraDomanda(data);
+
+    if (data.type === 'risposte') {
+      document.getElementById('contatore').textContent =
+        'Hanno risposto ' + data.date + ' su ' + data.totale;
+      // barra che si riempie man mano che arrivano le risposte
+      document.getElementById('progresso').style.setProperty('--fatto', data.totale ? data.date / data.totale : 0);
+    }
+
+    if (data.type === 'risultato') mostraRisultato(data);
+
+    if (data.type === 'fine') {
+      clearInterval(conto);
+      document.getElementById('stato').textContent = 'Quiz finito';
+      document.getElementById('titolo-classifica').textContent = 'Classifica finale';
+      disegnaClassifica(document.getElementById('classifica'), data.classifica);
+      bottoneAvanti.hidden = true;
+      palco(false, false, true);
+      // il podio sale gradino dopo gradino, poi i coriandoli
+      document.getElementById('podio').hidden = false;
+      disegnaPodio(document.getElementById('podio'), data.classifica);
+    }
+  };
+
+  webSocket.onclose = () => {
+    document.getElementById('errore-partita').textContent = 'Connessione con il server persa';
+  };
+
+  // indirizzo da proiettare per gli studenti
+  fetch('/indirizzo')
+    .then((risposta) => risposta.json())
+    .then((indirizzi) => {
+      document.getElementById('indirizzo').textContent = indirizzi[0] || location.origin;
+    });
+</script>
+</body>
+</html>

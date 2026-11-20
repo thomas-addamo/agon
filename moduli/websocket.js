@@ -1,40 +1,38 @@
 // =====================================================================
-//  moduli/websocket.js — il quiz dal vivo con il modulo ws
+//  moduli/websocket.js — le partite dal vivo con il modulo ws
 //
 //  Tutti i messaggi sono oggetti JSON con un campo "type".
+//  Ogni client ricorda in ws.pin la partita in cui si trova: i messaggi
+//  di una partita arrivano solo ai client con lo stesso PIN.
 //
 //  Dal client al server:
-//    { type: 'docente', token }          la pagina del docente si presenta con il token del login
-//    { type: 'entra', nome }             uno studente entra con il suo nome
+//    { type: 'crea', token, quiz }       il docente avvia il quiz con quell'id
+//    { type: 'entra', pin, nome }        uno studente entra in una partita
 //    { type: 'risposta', scelta }        uno studente risponde (indice 0..3)
 //    { type: 'avanti' }                  (docente) avvia / chiudi domanda / prossima
 //    { type: 'ricomincia' }              (docente) torna alla sala d'attesa
 //
 //  Dal server ai client:
-//    entrato, errore, non-autorizzato, giocatori, attesa, domanda,
-//    risposte, risultato, fine
+//    creata, entrato, errore, non-autorizzato, giocatori, attesa,
+//    domanda, risposte, risultato, fine, chiusa
 // =====================================================================
 
 // [WS] dal modulo ws prendo la classe Server, come negli esercizi in classe
 const { Server } = require('ws');
 const archivio = require('./archivio');
-const partita = require('./partita');
+const partite = require('./partita');
 const utenti = require('./utenti');
 
 let ws_server;
 let quale = 0;        // contatore per dare un id a ogni client (come ws_socket_04)
-let timer = null;     // il setTimeout che chiude la domanda allo scadere del tempo
-
-// l'ultimo messaggio di fase mandato a tutti: chi entra a partita
-// iniziata lo riceve subito e vede la stessa schermata degli altri
-let ultimoMessaggio = { type: 'attesa' };
 
 // [WS] broadcast: trasformo l'oggetto in stringa JSON una volta sola
-// e lo mando a tutti i client collegati (ws_server.clients)
-function broadcast(msg) {
+// e lo mando a tutti i client collegati (ws_server.clients)...
+// ...ma solo a quelli che sono nella stessa partita
+function broadcast(partita, msg) {
   const data = JSON.stringify(msg);
   ws_server.clients.forEach((client) => {
-    client.send(data);
+    if (client.pin === partita.pin) client.send(data);
   });
 }
 
@@ -43,60 +41,54 @@ function manda(ws, msg) {
   ws.send(JSON.stringify(msg));
 }
 
-// Manda a tutti un cambio di fase e se lo ricorda per chi entra dopo
-function cambiaFase(msg) {
-  ultimoMessaggio = msg;
-  broadcast(msg);
+// Manda a tutta la partita un cambio di fase e se lo ricorda per chi entra dopo
+function cambiaFase(partita, msg) {
+  partita.ultimoMessaggio = msg;
+  broadcast(partita, msg);
 }
 
-function mandaGiocatori() {
-  broadcast({ type: 'giocatori', giocatori: partita.elencoGiocatori() });
+function mandaGiocatori(partita) {
+  broadcast(partita, { type: 'giocatori', giocatori: partite.elencoGiocatori(partita) });
 }
 
 // ---------------------------------------------------------------------
 // Svolgimento della partita
 // ---------------------------------------------------------------------
 
-function prossimaDomanda() {
-  const msg = partita.prossimaDomanda();
-  cambiaFase(msg);
+function prossimaDomanda(partita) {
+  const msg = partite.prossimaDomanda(partita);
+  cambiaFase(partita, msg);
   if (msg.type === 'domanda') {
-    broadcast(partita.contaRisposte());
+    broadcast(partita, partite.contaRisposte(partita));
     // la domanda si chiude da sola quando finisce il tempo
-    timer = setTimeout(chiudiDomanda, msg.tempo * 1000);
+    partita.timer = setTimeout(() => chiudiDomanda(partita), msg.tempo * 1000);
   }
 }
 
-function chiudiDomanda() {
-  clearTimeout(timer);
-  cambiaFase(partita.chiudiDomanda());
+function chiudiDomanda(partita) {
+  clearTimeout(partita.timer);
+  cambiaFase(partita, partite.chiudiDomanda(partita));
 }
 
 // Il docente ha premuto il pulsante principale: cosa fa dipende dalla fase
-function avanti(ws) {
-  const fase = partita.faseAttuale();
-
-  if (fase === 'attesa') {
-    const domande = archivio.leggi();
-    if (domande.length === 0) {
-      return manda(ws, { type: 'errore', testo: 'Non ci sono domande: aggiungine almeno una' });
-    }
-    if (partita.elencoGiocatori().length === 0) {
+function avanti(ws, partita) {
+  if (partita.fase === 'attesa') {
+    if (partite.elencoGiocatori(partita).length === 0) {
       return manda(ws, { type: 'errore', testo: 'Nessuno studente in sala' });
     }
-    partita.avvia(domande);
-    prossimaDomanda();
-  } else if (fase === 'domanda') {
-    chiudiDomanda();          // il docente chiude la domanda prima del tempo
-  } else if (fase === 'risultato') {
-    prossimaDomanda();
+    partite.avvia(partita);
+    prossimaDomanda(partita);
+  } else if (partita.fase === 'domanda') {
+    chiudiDomanda(partita);          // il docente chiude la domanda prima del tempo
+  } else if (partita.fase === 'risultato') {
+    prossimaDomanda(partita);
   }
 }
 
-function ricomincia() {
-  clearTimeout(timer);
-  cambiaFase(partita.ricomincia());
-  mandaGiocatori();
+function ricomincia(partita) {
+  clearTimeout(partita.timer);
+  cambiaFase(partita, partite.ricomincia(partita));
+  mandaGiocatori(partita);
 }
 
 // ---------------------------------------------------------------------
@@ -112,8 +104,9 @@ function avviaWebSocket(server) {
   ws_server.on('connection', (ws) => {
     quale++;
     ws.id = quale;
-    ws.docente = false;
-    ws.nome = null;
+    ws.pin = null;        // la partita in cui si trova
+    ws.docente = false;   // true se ha creato la partita
+    ws.nome = null;       // nome dello studente
     console.log('New client connected! id = ' + ws.id);
 
     // [WS] evento 'message': arriva una stringa, la trasformo in oggetto.
@@ -126,58 +119,87 @@ function avviaWebSocket(server) {
         return;
       }
 
-      if (arriva.type === 'docente') {
-        // solo chi ha fatto il login può comandare la partita
+      // il docente avvia un quiz: nasce una partita con un PIN nuovo
+      if (arriva.type === 'crea') {
+        if (ws.pin !== null) return;   // ha già una partita
         const utente = utenti.utenteDaToken(arriva.token);
         if (utente === null) {
           return manda(ws, { type: 'non-autorizzato' });
         }
+        const quiz = archivio.trova(Number(arriva.quiz));
+        if (!quiz) {
+          return manda(ws, { type: 'errore', testo: 'Questo quiz non esiste più' });
+        }
+        const partita = partite.crea(quiz);
         ws.docente = true;
-        console.log('Il client ' + ws.id + ' è il docente ' + utente);
-        manda(ws, ultimoMessaggio);
-        manda(ws, { type: 'giocatori', giocatori: partita.elencoGiocatori() });
+        ws.pin = partita.pin;
+        console.log('Il docente ' + utente + ' ha avviato "' + quiz.nome + '" con PIN ' + partita.pin);
+        manda(ws, { type: 'creata', pin: partita.pin, nome: quiz.nome, domande: quiz.domande.length });
+        manda(ws, partita.ultimoMessaggio);
+        mandaGiocatori(partita);
         return;
       }
 
+      // uno studente entra con PIN e nome
       if (arriva.type === 'entra') {
         if (ws.nome !== null) return;   // è già entrato
-        const esito = partita.entra(arriva.nome);
+        const partita = partite.trova(arriva.pin);
+        if (!partita) {
+          return manda(ws, { type: 'errore', testo: 'Nessuna partita con questo PIN' });
+        }
+        const esito = partite.entra(partita, arriva.nome);
         if (esito.errore) {
           return manda(ws, { type: 'errore', testo: esito.errore });
         }
+        ws.pin = partita.pin;
         ws.nome = esito.nome;
-        console.log('Il client ' + ws.id + ' è entrato come ' + ws.nome);
-        manda(ws, { type: 'entrato', nome: ws.nome });
-        manda(ws, ultimoMessaggio);
-        mandaGiocatori();
+        console.log('Il client ' + ws.id + ' è entrato come ' + ws.nome + ' nella partita ' + ws.pin);
+        manda(ws, { type: 'entrato', nome: ws.nome, quiz: partita.nome });
+        manda(ws, partita.ultimoMessaggio);
+        mandaGiocatori(partita);
         return;
       }
 
-      if (arriva.type === 'risposta') {
-        if (!partita.rispondi(ws.nome, arriva.scelta)) return;
-        broadcast(partita.contaRisposte());
+      // tutti gli altri messaggi riguardano la partita in cui si trova il client
+      const partita = partite.trova(ws.pin);
+      if (!partita) return;
+
+      if (arriva.type === 'risposta' && ws.nome !== null) {
+        if (!partite.rispondi(partita, ws.nome, arriva.scelta)) return;
+        broadcast(partita, partite.contaRisposte(partita));
         // hanno risposto tutti: inutile aspettare la fine del tempo
-        if (partita.hannoRispostoTutti()) chiudiDomanda();
+        if (partite.hannoRispostoTutti(partita)) chiudiDomanda(partita);
         return;
       }
 
-      // i comandi che seguono sono riservati alla pagina del docente
+      // i comandi che seguono sono riservati al docente della partita
       if (!ws.docente) return;
 
-      if (arriva.type === 'avanti') avanti(ws);
-      if (arriva.type === 'ricomincia') ricomincia();
+      if (arriva.type === 'avanti') avanti(ws, partita);
+      if (arriva.type === 'ricomincia') ricomincia(partita);
     });
 
     // [WS] evento 'close': il client ha chiuso la pagina o ha perso la connessione
     ws.on('close', () => {
       console.log('Client has disconnected! id = ' + ws.id);
+      const partita = partite.trova(ws.pin);
+      if (!partita) return;
+
+      // se esce il docente la partita finisce per tutti
+      if (ws.docente) {
+        console.log('Partita ' + partita.pin + ' chiusa');
+        broadcast(partita, { type: 'chiusa' });
+        partite.chiudi(partita);
+        return;
+      }
+
       if (ws.nome !== null) {
-        partita.esce(ws.nome);
-        mandaGiocatori();
+        partite.esce(partita, ws.nome);
+        mandaGiocatori(partita);
         // chi è rimasto potrebbe aver già risposto tutto
-        if (partita.faseAttuale() === 'domanda') {
-          broadcast(partita.contaRisposte());
-          if (partita.hannoRispostoTutti()) chiudiDomanda();
+        if (partita.fase === 'domanda') {
+          broadcast(partita, partite.contaRisposte(partita));
+          if (partite.hannoRispostoTutti(partita)) chiudiDomanda(partita);
         }
       }
     });

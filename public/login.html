@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Agon · Accesso docente</title>
 <link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:,">
 </head>
 <body>
 
@@ -15,8 +16,10 @@
 
 <main class="contenuto stretto">
   <section class="card">
-    <p class="etichetta">Area docente</p>
-    <h1 id="titolo">Accedi</h1>
+    <div class="intestazione">
+      <p class="etichetta">Area docente</p>
+      <h1 id="titolo">Accedi</h1>
+    </div>
 
     <form id="form-accesso" class="form-domanda">
       <label class="campo-etichetta">Nome utente
@@ -29,13 +32,14 @@
       <p id="errore" class="errore"></p>
     </form>
 
-    <p class="testo-secondario">
+    <p class="t-piccolo testo-secondario">
       <span id="domanda-cambio">Non hai un account?</span>
       <a href="#" id="cambia">Registrati</a>
     </p>
   </section>
 </main>
 
+<script src="effetti.js"></script>
 <script>
   // la pagina ha due modalità: 'login' e 'registrazione'
   let modalita = 'login';
@@ -49,6 +53,7 @@
     document.getElementById('domanda-cambio').textContent = login ? 'Non hai un account?' : 'Hai già un account?';
     document.getElementById('cambia').textContent = login ? 'Registrati' : 'Accedi';
     document.getElementById('errore').textContent = '';
+    ripeti(document.getElementById('titolo'), 'cambio');   // il titolo rientra animato
   });
 
   // [JS] manda una richiesta POST con i dati in JSON e restituisce
@@ -75,6 +80,7 @@
       const registrazione = await post('/utenti/registrazione', credenziali);
       if (!registrazione.ok) {
         errore.textContent = registrazione.dati.errore;
+        scuoti(document.getElementById('form-accesso'));
         return;
       }
     }
@@ -82,6 +88,7 @@
     const login = await post('/utenti/login', credenziali);
     if (!login.ok) {
       errore.textContent = login.dati.errore;
+      scuoti(document.getElementById('form-accesso'));
       return;
     }
 

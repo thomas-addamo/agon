@@ -1,28 +1,94 @@
 /* =====================================================================
-   Agon — stile PROVVISORIO
-   Serve solo a rendere le pagine usabili mentre costruiamo l'app.
-   Verrà sostituito dal design system: i nomi delle classi resteranno
-   gli stessi, cambieranno i valori delle variabili e i dettagli.
+   Agon — design system
+   Fonte: l'artifact "Agon" (design system). Questo file contiene:
+     1. i token (colori, font, spazi, raggi) come variabili CSS
+     2. i componenti (barra, card, bottone, campo, badge, risposta,
+        timer, esito, giocatori, classifica)
+     3. l'impaginazione delle tre pagine
+   Regola: i componenti usano SOLO le variabili, mai colori scritti a mano.
    ===================================================================== */
 
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;600;700&family=JetBrains+Mono:wght@600;700&display=swap");
+
+/* =====================================================================
+   1. TOKEN
+   ===================================================================== */
+
+/* tema chiaro: quello del proiettore (docente.html lo impone sempre) */
 :root {
-  --sfondo: #ffffff;
-  --superficie: #f4f4f6;
-  --testo: #111114;
-  --testo-secondario: #6b6b74;
-  --accento: #2f5bea;
-  --giusto: #1f9d55;
-  --sbagliato: #d64545;
+  --carta: #f5f6fa;
+  --carta-alta: #ffffff;
+  --linea: #dadde8;
+  --linea-forte: #8a90a3;
+  --inchiostro: #12141c;
+  --inchiostro-tenue: #5a6072;
+  --testo-su-inchiostro: #f5f6fa;
 
-  --r0: #e5484d;   /* colori delle 4 risposte */
-  --r1: #2f5bea;
-  --r2: #e5a00d;
-  --r3: #1f9d55;
+  /* le quattro risposte: uguali nei due temi */
+  --risposta-a: #d93a2b;   /* corallo */
+  --risposta-b: #2457d6;   /* cobalto */
+  --risposta-c: #e9a100;   /* ocra    */
+  --risposta-d: #13865a;   /* verde   */
+  --vero: var(--risposta-d);
+  --falso: var(--risposta-a);
+  --testo-su-colore: #ffffff;
+  --testo-su-ocra: #12141c;
 
-  --raggio: 14px;
-  --spazio: 16px;
-  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --podio: #f2b705;
+  --giusto: #0f7a51;
+  --sbagliato: #c33325;
+  --fuoco: #2457d6;
+
+  --ombra-tessera: 0 4px 0 rgba(18, 20, 28, 0.22);
+
+  --font-display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --font-testo: Figtree, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-numeri: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  /* movimento: durate e curve usate da tutte le animazioni */
+  --durata-breve: 150ms;
+  --durata-media: 350ms;
+  --durata-lunga: 600ms;
+  --molla: cubic-bezier(0.34, 1.56, 0.64, 1);   /* supera la meta e torna indietro */
+  --uscita: cubic-bezier(0.2, 0.8, 0.2, 1);     /* parte veloce e frena */
+
+  color-scheme: light;
 }
+
+/* tema scuro: per i telefoni impostati in modalità scura */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --carta: #12141c;
+    --carta-alta: #1b1e29;
+    --linea: #2e3242;
+    --linea-forte: #6b7186;
+    --inchiostro: #f1f2f7;
+    --inchiostro-tenue: #a3a8ba;
+    --testo-su-inchiostro: #12141c;
+    --giusto: #4acb92;
+    --sbagliato: #ff7a6b;
+    --fuoco: #8aa8ff;
+    --ombra-tessera: 0 4px 0 rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+}
+
+/* =====================================================================
+   2. BASE E TIPOGRAFIA
+   ===================================================================== */
 
 * { box-sizing: border-box; }
 
@@ -31,171 +97,360 @@
 
 body {
   margin: 0;
-  font-family: var(--font);
-  background: var(--sfondo);
-  color: var(--testo);
+  background: var(--carta);
+  color: var(--inchiostro);
+  font-family: var(--font-testo);
+  font-size: 17px;
+  line-height: 26px;
 }
 
-h1, h2, p { margin: 0 0 var(--spazio); }
-h1 { font-size: 2rem; }
-h2 { font-size: 1.4rem; }
+h1, h2, p { margin: 0; }
+:focus-visible { outline: 3px solid var(--fuoco); outline-offset: 2px; }
+a { color: var(--fuoco); }
 
-/* ---------- struttura ---------- */
+/* stili di testo del design system */
+h1, .t-titolo { font-family: var(--font-display); font-size: 40px; line-height: 44px; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+.t-domanda { font-family: var(--font-display); font-size: 30px; line-height: 36px; font-weight: 700; text-wrap: balance; }
+h2, .t-sottotitolo { font-family: var(--font-display); font-size: 22px; line-height: 28px; font-weight: 700; }
+.t-piccolo { font-size: 14px; line-height: 20px; }
+.t-cifre { font-family: var(--font-numeri); font-weight: 600; font-variant-numeric: tabular-nums; }
+.etichetta { font-size: 13px; line-height: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--inchiostro-tenue); }
+.testo-secondario { color: var(--inchiostro-tenue); }
 
-.barra {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px var(--spazio);
-  border-bottom: 1px solid var(--superficie);
+/* =====================================================================
+   3. COMPONENTI
+   ===================================================================== */
+
+/* ---------- Barra ---------- */
+.barra { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); padding: var(--space-3) var(--space-4); background: var(--carta-alta); border-bottom: 1px solid var(--linea); }
+.logo { font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1; letter-spacing: -0.02em; color: var(--inchiostro); }
+.logo::after { content: ""; display: inline-block; width: 0.28em; height: 0.28em; margin-left: 0.08em; border-radius: var(--radius-pill); background: var(--podio); }
+.barra-info { display: flex; align-items: center; gap: var(--space-2); color: var(--inchiostro-tenue); font-size: 14px; line-height: 20px; }
+
+/* ---------- Card ---------- */
+.card { background: var(--carta-alta); border: 1px solid var(--linea); border-radius: var(--radius-md); padding: var(--space-6); display: grid; gap: var(--space-4); }
+
+/* ---------- Bottone ---------- */
+.bottone { font: inherit; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 44px; padding: 0 var(--space-6); border: 2px solid var(--inchiostro); border-radius: var(--radius-pill); background: var(--inchiostro); color: var(--testo-su-inchiostro); cursor: pointer; }
+.bottone:hover { filter: brightness(1.15); }
+.bottone:active { transform: translateY(1px); }
+.bottone.secondario { background: transparent; color: var(--inchiostro); border-color: var(--linea-forte); }
+.bottone.secondario:hover { filter: none; border-color: var(--inchiostro); }
+.bottone.piccolo { min-height: 32px; padding: 0 var(--space-4); font-size: 14px; }
+.bottone.grande { min-height: 56px; padding: 0 var(--space-8); font-size: 20px; }
+.bottone:disabled { opacity: 0.4; cursor: not-allowed; filter: none; transform: none; }
+
+/* ---------- Campo ---------- */
+.campo-etichetta { display: grid; gap: var(--space-2); font-weight: 600; }
+.campo { font: inherit; font-weight: 400; width: 100%; min-height: 44px; padding: var(--space-2) var(--space-3); border: 1.5px solid var(--linea-forte); border-radius: var(--radius-sm); background: var(--carta-alta); color: var(--inchiostro); }
+.campo::placeholder { color: var(--inchiostro-tenue); }
+.campo:focus-visible { outline-offset: 0; border-color: var(--fuoco); }
+.errore { color: var(--sbagliato); font-size: 14px; line-height: 20px; min-height: 20px; }
+.errore:not(:empty)::before { content: "✗ "; }
+.suggerimento { color: var(--inchiostro-tenue); font-size: 14px; line-height: 20px; }
+
+/* ---------- Badge ---------- */
+.badge { display: inline-flex; align-items: center; gap: var(--space-1); padding: 2px var(--space-3); border-radius: var(--radius-pill); border: 1.5px solid var(--linea-forte); font-size: 13px; line-height: 18px; font-weight: 700; color: var(--inchiostro); background: var(--carta-alta); }
+.badge::before { content: "ABCD"; font-family: var(--font-numeri); font-size: 11px; letter-spacing: 0.04em; color: var(--inchiostro-tenue); }
+.badge.vf::before { content: "V/F"; }
+
+/* ---------- Risposta ---------- */
+/* la lettera A-D (o V/F) la aggiunge il CSS con ::before: il colore non è mai da solo */
+.risposte { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+/* griglia a due colonne: la lettera, poi il testo. minmax(0, 1fr) obbliga il testo
+   a restare nella tessera: le parole troppo lunghe (es. ws_server.broadcast(data))
+   vanno a capo invece di uscire dal bordo */
+.risposta { font: inherit; font-family: var(--font-display); font-weight: 700; font-size: 22px; line-height: 28px; position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: var(--space-3); min-height: 96px; padding: var(--space-4); border: none; border-radius: var(--radius-lg); color: var(--testo-su-colore); text-align: left; cursor: pointer; box-shadow: var(--ombra-tessera); margin-bottom: 4px; overflow-wrap: anywhere; min-width: 0; }
+/* risposte lunghe (più di 24 caratteri): testo più piccolo, la classe la mette il JavaScript */
+.risposta.lunga { font-size: 18px; line-height: 24px; }
+.risposta::before { display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.22); font-family: var(--font-numeri); font-size: 20px; font-weight: 700; line-height: 1; }
+.risposta.r0 { background: var(--risposta-a); }
+.risposta.r1 { background: var(--risposta-b); }
+.risposta.r2 { background: var(--risposta-c); color: var(--testo-su-ocra); }
+.risposta.r3 { background: var(--risposta-d); }
+.risposta.r0::before { content: "A"; }
+.risposta.r1::before { content: "B"; }
+.risposta.r2::before { content: "C"; background: rgba(18, 20, 28, 0.14); }
+.risposta.r3::before { content: "D"; }
+.risposte.vf .r0 { background: var(--vero); }
+.risposte.vf .r1 { background: var(--falso); }
+.risposte.vf .r0::before { content: "V"; }
+.risposte.vf .r1::before { content: "F"; }
+.risposta:active { transform: translateY(4px); box-shadow: none; }
+.risposta:disabled { cursor: default; opacity: 0.35; box-shadow: none; transform: translateY(4px); }
+.risposta.scelta { opacity: 1; outline: 4px solid var(--inchiostro); outline-offset: 3px; }
+.risposta.spenta { opacity: 0.25; box-shadow: none; }
+.risposta.giusta { outline: 4px solid var(--inchiostro); outline-offset: 3px; }
+.risposta.giusta::after { content: "✓"; position: absolute; top: var(--space-3); right: var(--space-4); font-size: 28px; line-height: 1; }
+div.risposta { cursor: default; }
+/* tessere grandi solo su schermi larghi (proiettore): su finestre strette restano normali */
+@media (min-width: 720px) {
+  .risposte.proiezione .risposta { min-height: 132px; font-size: 30px; line-height: 36px; padding: var(--space-6); }
+  .risposte.proiezione .risposta::before { width: 48px; height: 48px; font-size: 26px; }
+  .risposte.proiezione .risposta.lunga { font-size: 22px; line-height: 28px; }
 }
-.logo { font-weight: 700; }
-.barra-info { color: var(--testo-secondario); font-size: 0.9rem; display: flex; align-items: center; gap: 10px; }
-.barra-info .bottone { border: 1px solid #d4d4da; }
-a { color: var(--accento); }
+@media (max-width: 520px) {
+  .risposte:not(.vf) { grid-template-columns: 1fr; }
+  .risposta { min-height: 72px; }
+}
 
+/* ---------- Timer ---------- */
+/* il JavaScript aggiorna il numero e la variabile --resto (da 1 a 0) */
+.timer { display: grid; gap: var(--space-2); }
+.timer-numero { font-family: var(--font-numeri); font-size: 56px; line-height: 56px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--inchiostro); }
+.timer-barra { height: var(--space-2); border-radius: var(--radius-pill); background: var(--linea); overflow: hidden; }
+.timer-barra > span { display: block; height: 100%; width: calc(var(--resto, 1) * 100%); border-radius: inherit; background: var(--inchiostro); transition: width 1s linear; }
+.timer.ultimi .timer-numero { color: var(--sbagliato); }
+.timer.ultimi .timer-barra > span { background: var(--sbagliato); }
+
+/* ---------- Esito ---------- */
+.esito { display: grid; gap: var(--space-2); }
+.esito-titolo { font-family: var(--font-display); font-size: 64px; line-height: 0.95; font-weight: 800; letter-spacing: -0.02em; }
+.esito.giusto .esito-titolo { color: var(--giusto); }
+.esito.sbagliato .esito-titolo, .esito.scaduto .esito-titolo { color: var(--sbagliato); }
+.esito.giusto .esito-titolo::before { content: "✓ "; }
+.esito.sbagliato .esito-titolo::before { content: "✗ "; }
+.esito-punti { font-family: var(--font-numeri); font-size: 36px; line-height: 40px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.esito-posizione { color: var(--inchiostro-tenue); }
+
+/* ---------- Giocatori ---------- */
+.giocatori { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.giocatori li { padding: var(--space-1) var(--space-4); border-radius: var(--radius-pill); background: var(--carta-alta); border: 1.5px solid var(--linea-forte); font-weight: 600; overflow-wrap: anywhere; }
+.giocatori li.scollegato { border-style: dashed; color: var(--inchiostro-tenue); }
+.giocatori li.scollegato::after { content: " · disconnesso"; font-weight: 400; font-size: 13px; }
+.conteggio { font-family: var(--font-numeri); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---------- Classifica ---------- */
+.classifica { list-style: none; margin: 0; padding: 0; counter-reset: posizione; display: grid; gap: var(--space-2); }
+.classifica li { counter-increment: posizione; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm); background: var(--carta-alta); border: 1px solid var(--linea); }
+.classifica li::before { content: counter(posizione); flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--radius-pill); font-family: var(--font-numeri); font-weight: 700; color: var(--inchiostro-tenue); border: 1.5px solid var(--linea-forte); }
+.classifica li:first-child::before { background: var(--podio); border-color: var(--podio); color: var(--testo-su-ocra); }
+.classifica .nome { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.classifica .guadagno { font-family: var(--font-numeri); font-weight: 600; color: var(--giusto); font-variant-numeric: tabular-nums; }
+.classifica .punti { font-family: var(--font-numeri); font-weight: 700; min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
+.classifica li.io { border: 2px solid var(--inchiostro); }
+
+/* =====================================================================
+   4. IMPAGINAZIONE DELLE PAGINE
+   ===================================================================== */
+
+/* colonna centrale: larga per il docente (proiettore), stretta per studente e login */
 .contenuto {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: calc(var(--spazio) * 2) var(--spazio);
+  padding: var(--space-8) var(--space-4) var(--space-12);
   display: grid;
-  gap: calc(var(--spazio) * 1.5);
+  gap: var(--space-8);
 }
-.contenuto.stretto { max-width: 520px; }
+.contenuto.stretto { max-width: 520px; padding-top: var(--space-12); }
 
-.card {
-  background: var(--superficie);
-  border-radius: var(--raggio);
-  padding: calc(var(--spazio) * 1.5);
-}
+/* le schermate dello studente: un blocco alla volta */
+.schermata { display: grid; gap: var(--space-6); }
+.intestazione { display: grid; gap: var(--space-2); }
 
-.riga-spazio {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--spazio);
-  flex-wrap: wrap;
-}
-.pulsanti { display: flex; gap: 8px; flex-wrap: wrap; }
+.riga-spazio { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+.pulsanti { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.riga-form { display: flex; gap: var(--space-2); }
+.riga-form .campo { flex: 1; min-width: 0; }
 
-/* ---------- testi ---------- */
+/* indirizzo da proiettare */
+.indirizzo { font-family: var(--font-numeri); font-weight: 700; font-size: 26px; line-height: 32px; overflow-wrap: anywhere; }
 
-.etichetta {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--testo-secondario);
-  margin-bottom: 6px;
-}
-.testo-secondario { color: var(--testo-secondario); }
-.errore { color: var(--sbagliato); min-height: 1.2em; }
-.indirizzo { font-size: 1.3rem; font-weight: 600; }
-.numero-grande { font-size: 3rem; font-weight: 700; }
-.giusto { color: var(--giusto); }
-.sbagliato { color: var(--sbagliato); }
-.tempo { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+/* palco del docente: domanda in corso con timer a destra */
+.palco { display: grid; gap: var(--space-6); }
+.palco-domanda { display: grid; grid-template-columns: 1fr auto; gap: var(--space-6); align-items: start; }
+.palco-domanda .timer { min-width: 140px; text-align: right; }
 
-/* ---------- controlli ---------- */
+/* form delle domande */
+.form-domanda { display: grid; gap: var(--space-4); }
+.form-domanda > .bottone { justify-self: start; }
+.opzioni { display: grid; gap: var(--space-2); }
+.opzione { display: flex; align-items: center; gap: var(--space-3); }
+.opzione input[type="radio"] { width: 20px; height: 20px; accent-color: var(--inchiostro); flex: none; }
 
-.bottone {
-  font: inherit;
-  font-weight: 600;
-  border: none;
-  border-radius: 999px;
-  padding: 10px 20px;
-  background: var(--accento);
-  color: #fff;
-  cursor: pointer;
-}
-.bottone.secondario { background: #fff; color: var(--testo); }
-.bottone.piccolo { padding: 6px 14px; font-size: 0.85rem; }
+/* elenco delle domande salvate */
+.elenco-domande { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); counter-reset: domanda; }
+.elenco-domande li { counter-increment: domanda; display: flex; gap: var(--space-4); align-items: flex-start; padding: var(--space-4); border: 1px solid var(--linea); border-radius: var(--radius-sm); }
+.elenco-domande li::before { content: counter(domanda); font-family: var(--font-numeri); font-weight: 700; color: var(--inchiostro-tenue); min-width: 2ch; }
+.elenco-domande .dettagli { flex: 1; min-width: 0; display: grid; gap: var(--space-1); justify-items: start; }
+.elenco-domande .testo-domanda { font-weight: 600; }
+.elenco-domande .pulsanti { flex: none; }
 
-.campo {
-  font: inherit;
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d4d4da;
-  border-radius: 10px;
-  background: #fff;
-}
-.riga-form { display: flex; gap: 8px; }
-.campo-etichetta { display: grid; gap: 6px; font-weight: 600; }
+/* i link che sembrano bottoni ("Nuovo quiz", "Avvia", "Modifica") */
+a.bottone { text-decoration: none; }
+.bottone.pericolo { border-color: var(--sbagliato); color: var(--sbagliato); }
 
-/* ---------- risposte ---------- */
+/* ---------- libreria dei quiz ---------- */
+.sezione-quiz { display: grid; gap: var(--space-4); }
+.griglia-quiz { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-4); }
+.scheda-quiz { background: var(--carta-alta); border: 1px solid var(--linea); border-radius: var(--radius-md); padding: var(--space-6); display: grid; gap: var(--space-2); align-content: start; min-width: 0; }
+.scheda-quiz h3 { margin: 0; overflow-wrap: break-word; }
+.scheda-quiz p { margin: 0; }
+.scheda-quiz .pulsanti { margin-top: var(--space-3); }
+/* le quattro tessere in miniatura: il segno di ogni quiz */
+.scheda-tessere { display: grid; grid-template-columns: repeat(4, 14px); gap: 4px; margin-bottom: var(--space-2); }
+.scheda-tessere span { height: 14px; border-radius: 4px; }
+.scheda-tessere span:nth-child(1) { background: var(--risposta-a); }
+.scheda-tessere span:nth-child(2) { background: var(--risposta-b); }
+.scheda-tessere span:nth-child(3) { background: var(--risposta-c); }
+.scheda-tessere span:nth-child(4) { background: var(--risposta-d); }
 
-.risposte {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: var(--spazio);
-}
-.risposta {
-  font: inherit;
-  font-weight: 600;
-  min-height: 80px;
-  padding: 14px;
-  border: none;
-  border-radius: var(--raggio);
-  color: #fff;
-  text-align: left;
-  cursor: pointer;
-}
-.risposta.r0 { background: var(--r0); }
-.risposta.r1 { background: var(--r1); }
-.risposta.r2 { background: var(--r2); }
-.risposta.r3 { background: var(--r3); }
-/* vero/falso: Vero verde, Falso rosso */
-.risposte.vf .r0 { background: var(--giusto); }
-.risposte.vf .r1 { background: var(--sbagliato); }
+/* ---------- scelta del tempo: tre bottoni affiancati ---------- */
+.scelta-tempo { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.scelta-tempo input { position: absolute; opacity: 0; pointer-events: none; }
+.scelta-tempo span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--space-6); border: 1.5px solid var(--linea-forte); border-radius: var(--radius-pill); font-family: var(--font-numeri); font-weight: 700; cursor: pointer; }
+.scelta-tempo input:checked + span { background: var(--inchiostro); border-color: var(--inchiostro); color: var(--testo-su-inchiostro); }
+.scelta-tempo input:focus-visible + span { outline: 3px solid var(--fuoco); outline-offset: 2px; }
 
-.risposta:disabled { cursor: default; opacity: 0.4; }
-.risposta.scelta { opacity: 1; outline: 4px solid var(--testo); }
-.risposta.spenta { opacity: 0.25; }
-.risposta.giusta { outline: 4px solid var(--testo); }
+/* ---------- PIN della partita ---------- */
+.ingresso { grid-template-columns: 1fr auto; align-items: center; }
+.pin { display: flex; gap: var(--space-2); }
+.pin span { display: grid; place-items: center; width: 56px; height: 72px; border-radius: var(--radius-sm); background: var(--inchiostro); color: var(--testo-su-inchiostro); font-family: var(--font-numeri); font-weight: 700; font-size: 44px; line-height: 1; }
+.pin span:nth-child(3) { margin-right: var(--space-3); }   /* 482 913: due gruppi da tre, più facili da leggere */
+.campo-pin { font-family: var(--font-numeri); font-weight: 700; font-size: 28px; letter-spacing: 0.3em; text-align: center; min-height: 60px; }
 
-/* ---------- liste ---------- */
-
-.chip-lista { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.chip-lista li { background: #fff; padding: 6px 12px; border-radius: 999px; }
-.chip-lista li.scollegato { opacity: 0.4; }
-
-.classifica { padding: 0; margin: 0; list-style: none; counter-reset: pos; display: grid; gap: 6px; }
-.classifica li {
-  counter-increment: pos;
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  background: #fff;
-  padding: 10px 14px;
-  border-radius: 10px;
-}
-.classifica li::before { content: counter(pos); width: 1.5em; color: var(--testo-secondario); }
-.classifica li span { flex: 1; }
-.classifica li em { color: var(--giusto); font-style: normal; }
-.classifica li.io { outline: 2px solid var(--accento); }
-
-/* ---------- gestione domande ---------- */
-
-.form-domanda { display: grid; gap: 12px; margin-bottom: calc(var(--spazio) * 1.5); }
-.form-domanda .bottone { justify-self: start; }
-.opzioni { display: grid; gap: 8px; }
-.opzione { display: flex; align-items: center; gap: 10px; }
-
-.elenco-domande { padding-left: 1.2em; margin: 0; display: grid; gap: 10px; }
-.elenco-domande li > div { display: inline-block; width: calc(100% - 90px); vertical-align: top; }
-.elenco-domande li > button { float: right; }
-.elenco-domande p { margin-bottom: 4px; }
-.testo-domanda { font-weight: 600; }
-.badge {
-  display: inline-block;
-  font-size: 0.75rem;
-  background: #fff;
-  border-radius: 999px;
-  padding: 2px 8px;
-  margin-bottom: 4px;
+@media (max-width: 720px) {
+  .ingresso { grid-template-columns: 1fr; }
+  .pin span { width: 44px; height: 56px; font-size: 32px; }
 }
 
 @media (max-width: 520px) {
-  h1 { font-size: 1.6rem; }
-  .risposte { grid-template-columns: 1fr; }
+  h1, .t-titolo { font-size: 32px; line-height: 36px; }
+  .t-domanda { font-size: 24px; line-height: 30px; }
+  .esito-titolo { font-size: 48px; }
+  .palco-domanda { grid-template-columns: 1fr; }
+  .palco-domanda .timer { text-align: left; }
+  .elenco-domande li { flex-wrap: wrap; }
+}
+
+/* =====================================================================
+   5. MOVIMENTO
+   Regola: le animazioni di entrata usano "backwards", così a fine
+   animazione tornano a valere gli stili normali (hover, stati...).
+   ===================================================================== */
+
+@keyframes entra      { from { opacity: 0; transform: translateY(16px); } }
+@keyframes appare     { from { opacity: 0; } }
+@keyframes pop        { 0% { opacity: 0; transform: scale(0.6); } }
+@keyframes tessera    { from { opacity: 0; transform: translateY(28px) scale(0.92); } }
+@keyframes timbro     { 0% { opacity: 0; transform: scale(1.8) rotate(-6deg); } 60% { opacity: 1; } }
+@keyframes scuoti     { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+@keyframes tic        { 0% { transform: scale(1.25); } }
+@keyframes battito    { 50% { transform: scale(1.15); } }
+@keyframes scelta     { 40% { transform: scale(1.04); } }
+@keyframes sali       { from { transform: scaleY(0); } }
+@keyframes saltella   { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-10px); } }
+@keyframes rimbalzo   { 0% { transform: translateY(-14px); opacity: 0; } 60% { transform: translateY(2px); } }
+
+/* ---------- pagine e schermate ---------- */
+.contenuto > * { animation: entra var(--durata-lunga) var(--uscita) backwards; }
+.contenuto > *:nth-child(2) { animation-delay: 80ms; }
+.schermata:not([hidden]), .palco:not([hidden]) { animation: entra var(--durata-lunga) var(--uscita) backwards; }
+.intestazione > * { animation: entra var(--durata-lunga) var(--uscita) backwards; }
+.intestazione > *:nth-child(2) { animation-delay: 70ms; }
+.logo::after { animation: rimbalzo 700ms var(--molla) 250ms backwards; }
+.scuoti { animation: scuoti 400ms ease-in-out; }
+.cambio { animation: entra var(--durata-media) var(--uscita); }
+
+/* ---------- bottoni e campi ---------- */
+.bottone { transition: transform var(--durata-breve) var(--uscita), background var(--durata-breve), border-color var(--durata-breve), box-shadow var(--durata-breve); }
+.bottone:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(18, 20, 28, 0.18); }
+.bottone:active:not(:disabled) { transform: scale(0.96); box-shadow: none; }
+.campo { transition: border-color var(--durata-breve), box-shadow var(--durata-breve); }
+.campo:focus { box-shadow: 0 0 0 4px rgba(36, 87, 214, 0.15); }
+
+/* ---------- risposte ---------- */
+.risposta { animation: tessera 520ms var(--molla) backwards; transition: transform var(--durata-breve) var(--uscita), box-shadow var(--durata-breve), opacity var(--durata-media), filter var(--durata-media); }
+.risposta:nth-child(2) { animation-delay: 70ms; }
+.risposta:nth-child(3) { animation-delay: 140ms; }
+.risposta:nth-child(4) { animation-delay: 210ms; }
+.risposta::before { transition: transform var(--durata-media) var(--molla); }
+button.risposta:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 7px 0 rgba(18, 20, 28, 0.22); filter: brightness(1.06); }
+button.risposta:hover:not(:disabled)::before { transform: rotate(-8deg) scale(1.1); }
+button.risposta:active:not(:disabled) { transform: translateY(4px); box-shadow: none; }
+.risposta:disabled { transform: translateY(4px) scale(0.97); }
+.risposta.scelta { animation: scelta 450ms var(--molla); transform: translateY(4px); }
+.risposta.spenta { transform: scale(0.96); filter: grayscale(0.6); }
+.risposta.giusta { animation: scelta 600ms var(--molla); }
+.risposta.giusta::after { animation: pop 500ms var(--molla) 150ms backwards; }
+.risposta.giusta { padding-right: 52px; }   /* spazio per il ✓ */
+
+/* ---------- timer ---------- */
+.timer-numero { display: inline-block; transform-origin: right center; }
+.timer-numero.tic { animation: tic 300ms var(--uscita); }
+.timer.ultimi .timer-numero { animation: battito 1s ease-in-out infinite; }
+
+/* ---------- attesa: le quattro tessere che saltellano ---------- */
+.onda { display: flex; gap: var(--space-2); }
+.onda span { width: 18px; height: 18px; border-radius: 6px; animation: saltella 1.2s ease-in-out infinite; }
+.onda span:nth-child(1) { background: var(--risposta-a); }
+.onda span:nth-child(2) { background: var(--risposta-b); animation-delay: 0.15s; }
+.onda span:nth-child(3) { background: var(--risposta-c); animation-delay: 0.3s; }
+.onda span:nth-child(4) { background: var(--risposta-d); animation-delay: 0.45s; }
+.onda.piccola span { width: 10px; height: 10px; border-radius: 3px; }
+.onda.grande span { width: 32px; height: 32px; border-radius: 10px; }
+.in-attesa { display: flex; align-items: center; gap: var(--space-3); color: var(--inchiostro-tenue); }
+
+/* ---------- esito ---------- */
+.esito-titolo { transform-origin: left center; animation: timbro 650ms var(--molla) backwards; }
+.esito.sbagliato .esito-titolo, .esito.scaduto .esito-titolo { animation: appare 200ms backwards, scuoti 450ms ease-in-out 150ms; }
+.esito-punti { animation: pop 500ms var(--molla) 250ms backwards; }
+.esito-posizione { animation: entra var(--durata-lunga) var(--uscita) 450ms backwards; }
+
+/* ---------- giocatori e contatori ---------- */
+.giocatori li { transition: border-color var(--durata-media), color var(--durata-media); }
+.giocatori li.nuovo { animation: pop 450ms var(--molla) backwards; }
+.conteggio { display: inline-block; }
+.conteggio.tic { animation: tic 350ms var(--molla); }
+.barra-progresso { height: 6px; border-radius: var(--radius-pill); background: var(--linea); overflow: hidden; }
+.barra-progresso > span { display: block; height: 100%; width: calc(var(--fatto, 0) * 100%); background: var(--risposta-d); border-radius: inherit; transition: width var(--durata-media) var(--uscita); }
+
+/* ---------- classifica ---------- */
+.classifica li.nuova { animation: entra 500ms var(--uscita) backwards; animation-delay: calc(var(--i, 0) * 60ms); }
+.classifica .guadagno:not(:empty) { animation: pop 450ms var(--molla) 500ms backwards; }
+
+/* ---------- libreria e PIN ---------- */
+.scheda-quiz { animation: entra 500ms var(--uscita) backwards; animation-delay: calc(var(--i, 0) * 60ms); transition: transform var(--durata-breve) var(--uscita), box-shadow var(--durata-breve), border-color var(--durata-breve); }
+.scheda-quiz:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(18, 20, 28, 0.1); border-color: var(--linea-forte); }
+.scheda-quiz:hover .scheda-tessere span { animation: saltella 0.8s ease-in-out; }
+.scheda-quiz:hover .scheda-tessere span:nth-child(2) { animation-delay: 0.08s; }
+.scheda-quiz:hover .scheda-tessere span:nth-child(3) { animation-delay: 0.16s; }
+.scheda-quiz:hover .scheda-tessere span:nth-child(4) { animation-delay: 0.24s; }
+.pin span { animation: tessera 520ms var(--molla) backwards; animation-delay: calc(var(--i, 0) * 70ms + 200ms); }
+.scelta-tempo span { transition: background var(--durata-breve), color var(--durata-breve), border-color var(--durata-breve), transform var(--durata-breve) var(--molla); }
+.scelta-tempo input:checked + span { transform: scale(1.04); }
+
+/* ---------- elenco domande del docente ---------- */
+.elenco-domande li.nuova { animation: pop 500ms var(--molla) backwards; }
+.elenco-domande li { transition: border-color var(--durata-breve), background var(--durata-breve); }
+.elenco-domande li:hover { border-color: var(--linea-forte); }
+.opzioni:not([hidden]) { animation: appare var(--durata-media) backwards; }
+
+/* ---------- podio ---------- */
+.podio { display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; gap: var(--space-3); max-width: 560px; width: 100%; margin: 0 auto; }
+.gradino { display: grid; gap: var(--space-1); justify-items: center; text-align: center; min-width: 0; grid-row: 1; }
+.gradino.p1 { grid-column: 2; }   /* il primo sempre al centro, anche se è da solo */
+.gradino.p2 { grid-column: 1; }
+.gradino.p3 { grid-column: 3; }
+.gradino .nome { font-family: var(--font-display); font-weight: 700; font-size: 20px; line-height: 24px; overflow-wrap: anywhere; animation: entra 400ms var(--uscita) backwards; }
+.gradino .punti { font-family: var(--font-numeri); font-weight: 600; font-size: 14px; color: var(--inchiostro-tenue); animation: entra 400ms var(--uscita) backwards; }
+.gradino .blocco { width: 100%; margin-top: var(--space-2); border-radius: var(--radius-lg) var(--radius-lg) 0 0; display: grid; justify-items: center; padding-top: var(--space-3); font-family: var(--font-numeri); font-weight: 700; font-size: 40px; line-height: 1; color: var(--testo-su-colore); transform-origin: bottom; animation: sali 700ms var(--molla) backwards; }
+.gradino.p1 .blocco { height: 170px; background: var(--podio); color: var(--testo-su-ocra); animation-delay: 900ms; }
+.gradino.p2 .blocco { height: 120px; background: var(--risposta-b); animation-delay: 500ms; }
+.gradino.p3 .blocco { height: 84px; background: var(--risposta-a); animation-delay: 100ms; }
+.gradino.p1 .nome, .gradino.p1 .punti { animation-delay: 1300ms; }
+.gradino.p2 .nome, .gradino.p2 .punti { animation-delay: 900ms; }
+.gradino.p3 .nome, .gradino.p3 .punti { animation-delay: 500ms; }
+
+/* ---------- coriandoli ---------- */
+.coriandoli { position: fixed; inset: 0; pointer-events: none; z-index: 100; }
+
+/* chi chiede meno movimento al sistema operativo vede solo il risultato finale */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
 }

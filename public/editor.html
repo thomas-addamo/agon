@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<!-- data-theme="light": le pagine del docente vanno al proiettore, sempre in tema chiaro -->
+<html lang="it" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agon · Editor</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:,">
+</head>
+<body>
+
+<header class="barra">
+  <span class="logo">Agon</span>
+  <span class="barra-info">
+    <span id="nome-docente"></span>
+    <button id="esci" class="bottone piccolo secondario">Esci</button>
+  </span>
+</header>
+
+<main class="contenuto">
+
+  <div class="riga-spazio">
+    <div class="intestazione">
+      <p class="etichetta"><a href="/docente">← I quiz</a></p>
+      <h1 id="titolo">Nuovo quiz</h1>
+    </div>
+    <div class="pulsanti">
+      <a href="/docente" class="bottone secondario">Annulla</a>
+      <button id="salva" class="bottone grande">Salva quiz</button>
+    </div>
+  </div>
+  <p id="errore-quiz" class="errore"></p>
+
+  <!-- ================= NOME E TEMPO ================= -->
+  <section class="card">
+    <label class="campo-etichetta">Nome del quiz
+      <input id="nome" class="campo" maxlength="60" placeholder="Per esempio: WebSocket e Node.js">
+    </label>
+    <div class="campo-etichetta">Tempo per ogni domanda
+      <div class="scelta-tempo" role="radiogroup">
+        <label><input type="radio" name="tempo" value="10"><span>10 s</span></label>
+        <label><input type="radio" name="tempo" value="20" checked><span>20 s</span></label>
+        <label><input type="radio" name="tempo" value="30"><span>30 s</span></label>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DOMANDE ================= -->
+  <section class="card">
+    <div class="riga-spazio">
+      <h2>Domande</h2>
+      <span class="testo-secondario"><span id="numero-domande" class="conteggio">0</span> nel quiz</span>
+    </div>
+    <ol id="elenco-domande" class="elenco-domande"></ol>
+    <p id="nessuna" class="testo-secondario">Ancora nessuna domanda: aggiungi la prima qui sotto.</p>
+  </section>
+
+  <section class="card">
+    <h2 id="titolo-form">Aggiungi una domanda</h2>
+    <form id="form-domanda" class="form-domanda">
+      <label class="campo-etichetta">Tipo
+        <select id="tipo" class="campo">
+          <option value="multipla">Risposta multipla</option>
+          <option value="vf">Vero o falso</option>
+        </select>
+      </label>
+
+      <label class="campo-etichetta">Domanda
+        <textarea id="testo-domanda" class="campo" rows="2" maxlength="200"></textarea>
+      </label>
+
+      <!-- risposta multipla: 4 risposte, il pallino indica quella giusta -->
+      <div id="campi-multipla" class="opzioni">
+        <label class="opzione"><input type="radio" name="corretta" value="0" checked><input class="campo testo-risposta" placeholder="Risposta A"></label>
+        <label class="opzione"><input type="radio" name="corretta" value="1"><input class="campo testo-risposta" placeholder="Risposta B"></label>
+        <label class="opzione"><input type="radio" name="corretta" value="2"><input class="campo testo-risposta" placeholder="Risposta C"></label>
+        <label class="opzione"><input type="radio" name="corretta" value="3"><input class="campo testo-risposta" placeholder="Risposta D"></label>
+      </div>
+
+      <!-- vero o falso: si sceglie solo quale delle due è giusta -->
+      <div id="campi-vf" class="opzioni" hidden>
+        <label class="opzione"><input type="radio" name="corretta-vf" value="0" checked> Vero</label>
+        <label class="opzione"><input type="radio" name="corretta-vf" value="1"> Falso</label>
+      </div>
+
+      <p class="suggerimento">Seleziona il pallino accanto alla risposta giusta.</p>
+      <button id="aggiungi" class="bottone">Aggiungi domanda</button>
+      <p id="errore-domanda" class="errore"></p>
+    </form>
+  </section>
+
+</main>
+
+<script src="effetti.js"></script>
+<script src="sessione.js"></script>
+<script>
+  // Le domande stanno in questo array finché il docente non preme "Salva quiz":
+  // solo allora l'intero quiz viene mandato al server (POST o PUT).
+  let domande = [];
+
+  // [JS] URLSearchParams legge i parametri dell'indirizzo: /editor?quiz=3 → modifica il quiz 3
+  const idQuiz = new URLSearchParams(location.search).get('quiz');
+
+  const tipo = document.getElementById('tipo');
+
+  // ---------------------------------------------------------------
+  // Elenco delle domande del quiz
+  // ---------------------------------------------------------------
+
+  function disegnaDomande(nuova) {
+    const lista = document.getElementById('elenco-domande');
+    lista.innerHTML = '';
+    domande.forEach((d, i) => {
+      const li = document.createElement('li');
+      li.innerHTML =
+        '<div class="dettagli"><span class="badge"></span><p class="testo-domanda"></p><p class="t-piccolo testo-secondario"></p></div>' +
+        '<div class="pulsanti"><button class="bottone piccolo secondario">Modifica</button><button class="bottone piccolo secondario">Elimina</button></div>';
+      li.querySelector('.badge').textContent = d.tipo === 'vf' ? 'Vero o falso' : 'Multipla';
+      if (d.tipo === 'vf') li.querySelector('.badge').classList.add('vf');
+      li.querySelector('.testo-domanda').textContent = d.testo;
+      li.querySelector('.testo-secondario').textContent =
+        d.risposte.map((r, j) => (j === d.corretta ? '✓ ' + r : r)).join('  ·  ');
+      if (i === nuova) li.classList.add('nuova');   // la domanda appena aggiunta entra animata
+
+      const [modifica, elimina] = li.querySelectorAll('button');
+      // Modifica: la domanda torna nel form e lascia l'elenco
+      modifica.addEventListener('click', () => {
+        riempiForm(d);
+        domande.splice(i, 1);
+        disegnaDomande();
+        document.getElementById('form-domanda').scrollIntoView({ behavior: 'smooth' });
+      });
+      elimina.addEventListener('click', async () => {
+        await li.animate(
+          [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateX(40px)' }],
+          { duration: movimentoRidotto ? 1 : 250, easing: 'ease-in', fill: 'forwards' }
+        ).finished;
+        domande.splice(i, 1);   // [JS] splice toglie un elemento dall'array
+        disegnaDomande();
+      });
+      lista.appendChild(li);
+    });
+
+    const numero = document.getElementById('numero-domande');
+    if (numero.textContent !== String(domande.length)) ripeti(numero, 'tic');
+    numero.textContent = domande.length;
+    document.getElementById('nessuna').hidden = domande.length > 0;
+  }
+
+  // ---------------------------------------------------------------
+  // Form della domanda
+  // ---------------------------------------------------------------
+
+  // cambiando tipo mostro i campi giusti
+  tipo.addEventListener('change', () => {
+    document.getElementById('campi-multipla').hidden = tipo.value !== 'multipla';
+    document.getElementById('campi-vf').hidden = tipo.value !== 'vf';
+  });
+
+  function riempiForm(d) {
+    tipo.value = d.tipo;
+    tipo.dispatchEvent(new Event('change'));
+    document.getElementById('testo-domanda').value = d.testo;
+    if (d.tipo === 'multipla') {
+      document.querySelectorAll('.testo-risposta').forEach((campo, j) => (campo.value = d.risposte[j]));
+      document.querySelector('input[name="corretta"][value="' + d.corretta + '"]').checked = true;
+    } else {
+      document.querySelector('input[name="corretta-vf"][value="' + d.corretta + '"]').checked = true;
+    }
+  }
+
+  // legge il form e restituisce la domanda, oppure una stringa con l'errore.
+  // È solo un primo controllo: quello vero lo fa il server al salvataggio.
+  function leggiForm() {
+    const d = { tipo: tipo.value, testo: document.getElementById('testo-domanda').value.trim() };
+    if (d.testo === '') return 'Scrivi il testo della domanda';
+    if (d.tipo === 'multipla') {
+      d.risposte = [...document.querySelectorAll('.testo-risposta')].map((campo) => campo.value.trim());
+      if (d.risposte.some((r) => r === '')) return 'Compila tutte e 4 le risposte';
+      d.corretta = Number(document.querySelector('input[name="corretta"]:checked').value);
+    } else {
+      d.risposte = ['Vero', 'Falso'];
+      d.corretta = Number(document.querySelector('input[name="corretta-vf"]:checked').value);
+    }
+    return d;
+  }
+
+  document.getElementById('form-domanda').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const d = leggiForm();
+    if (typeof d === 'string') {
+      document.getElementById('errore-domanda').textContent = d;
+      scuoti(document.getElementById('form-domanda'));
+      return;
+    }
+    domande.push(d);
+    disegnaDomande(domande.length - 1);
+    document.getElementById('errore-domanda').textContent = '';
+    document.getElementById('form-domanda').reset();
+    tipo.dispatchEvent(new Event('change'));
+    document.getElementById('testo-domanda').focus();
+  });
+
+  // ---------------------------------------------------------------
+  // Salvataggio: POST /quiz (nuovo) oppure PUT /quiz/:id (modifica)
+  // ---------------------------------------------------------------
+
+  document.getElementById('salva').addEventListener('click', async () => {
+    const quiz = {
+      nome: document.getElementById('nome').value,
+      tempo: Number(document.querySelector('input[name="tempo"]:checked').value),
+      domande: domande,
+    };
+
+    const risposta = await api(idQuiz ? '/quiz/' + idQuiz : '/quiz', {
+      method: idQuiz ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(quiz),
+    });
+
+    if (!risposta.ok) {
+      document.getElementById('errore-quiz').textContent = (await risposta.json()).errore;
+      scuoti(document.getElementById('salva'));
+      return;
+    }
+    location.href = '/docente';
+  });
+
+  // ---------------------------------------------------------------
+  // Modifica di un quiz esistente: lo carico con GET /quiz/:id
+  // ---------------------------------------------------------------
+
+  async function caricaQuiz() {
+    const risposta = await api('/quiz/' + idQuiz);
+    if (!risposta.ok) {
+      document.getElementById('errore-quiz').textContent = 'Quiz non trovato';
+      return;
+    }
+    const quiz = await risposta.json();
+    document.getElementById('titolo').textContent = 'Modifica quiz';
+    document.getElementById('nome').value = quiz.nome;
+    document.querySelector('input[name="tempo"][value="' + quiz.tempo + '"]').checked = true;
+    domande = quiz.domande;
+    disegnaDomande();
+  }
+
+  if (idQuiz) caricaQuiz();
+  else disegnaDomande();
+</script>
+</body>
+</html>
