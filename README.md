@@ -43,7 +43,7 @@ I docenti si registrano e accedono da `/login`. Sono salvati in `docenti.json` *
 { "utente": "rossi", "password": "1234", "registrato": "2026-11-19T09:52:37.277Z", "accessi": ["2026-11-19T09:52:37.306Z"] }
 ```
 
-Proprio perché contiene le password, `docenti.json` **non è su Git** (è nel `.gitignore`): il server lo crea vuoto al primo avvio.
+`docenti.json` è nella cartella principale del progetto, accanto a `server.js`, ed è pubblicato su GitHub insieme al resto. Se manca, il server lo crea vuoto al primo avvio.
 
 `accessi` registra data e ora di ogni login. Dopo il login il server restituisce un **token** (stringa casuale creata con `crypto.randomUUID()`) che il browser conserva e rimanda:
 

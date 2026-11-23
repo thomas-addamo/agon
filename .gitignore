@@ -148,5 +148,3 @@ vite.config.ts.timestamp-*
 # Turbo Repo
 .turbo
 
-# Agon: i docenti con le password in chiaro restano solo sul computer del server
-docenti.json

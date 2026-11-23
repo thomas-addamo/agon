@@ -1,0 +1,21 @@
+[
+  {
+    "utente": "thomas.addamo",
+    "password": "Thomas08",
+    "registrato": "2026-11-19T16:30:24.024Z",
+    "accessi": [
+      "2026-11-19T16:30:24.029Z",
+      "2026-11-20T13:26:14.283Z",
+      "2026-11-20T13:38:52.552Z",
+      "2026-11-23T07:38:48.747Z"
+    ]
+  },
+  {
+    "utente": "daniele.porcaro",
+    "password": "Daniele123",
+    "registrato": "2026-11-23T08:06:56.625Z",
+    "accessi": [
+      "2026-11-23T08:06:56.630Z"
+    ]
+  }
+]

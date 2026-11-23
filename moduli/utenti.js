@@ -19,9 +19,8 @@ const crypto = require('crypto');
 
 const FILE = path.join(__dirname, '..', 'docenti.json');
 
-// docenti.json contiene le password in chiaro, quindi NON è su Git (.gitignore):
-// [NODE] fs.existsSync controlla se il file c'è; se manca (per esempio dopo un
-// clone del repository) lo creo vuoto all'avvio
+// [NODE] fs.existsSync controlla se il file c'è; se manca (per esempio se è
+// stato cancellato) lo creo vuoto all'avvio
 if (!fs.existsSync(FILE)) {
   fs.writeFileSync(FILE, '[]');
 }
