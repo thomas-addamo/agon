@@ -69,5 +69,116 @@
         "corretta": 2
       }
     ]
+  },
+  {
+    "id": 2,
+    "nome": "Storia: dall'Impero romano alla Repubblica",
+    "autore": "samuele.curatola",
+    "tempo": 20,
+    "creato": "2026-11-24T13:37:05.982Z",
+    "domande": [
+      {
+        "tipo": "multipla",
+        "testo": "In che anno cadde l'Impero romano d'Occidente?",
+        "risposte": [
+          "410 d.C.",
+          "476 d.C.",
+          "800 d.C.",
+          "1453 d.C."
+        ],
+        "corretta": 1
+      },
+      {
+        "tipo": "multipla",
+        "testo": "Chi fu incoronato imperatore la notte di Natale dell'anno 800?",
+        "risposte": [
+          "Ottone I",
+          "Carlo Magno",
+          "Federico Barbarossa",
+          "Clodoveo"
+        ],
+        "corretta": 1
+      },
+      {
+        "tipo": "multipla",
+        "testo": "In che anno Cristoforo Colombo arrivò in America?",
+        "risposte": [
+          "1453",
+          "1492",
+          "1517",
+          "1571"
+        ],
+        "corretta": 1
+      },
+      {
+        "tipo": "multipla",
+        "testo": "Chi affisse le 95 tesi nel 1517, dando inizio alla Riforma protestante?",
+        "risposte": [
+          "Giovanni Calvino",
+          "Erasmo da Rotterdam",
+          "Martin Lutero",
+          "Ulrico Zwingli"
+        ],
+        "corretta": 2
+      },
+      {
+        "tipo": "vf",
+        "testo": "La Rivoluzione francese iniziò nel 1789 con la presa della Bastiglia.",
+        "risposte": [
+          "Vero",
+          "Falso"
+        ],
+        "corretta": 0
+      },
+      {
+        "tipo": "multipla",
+        "testo": "Chi guidò la spedizione dei Mille nel 1860?",
+        "risposte": [
+          "Camillo Benso di Cavour",
+          "Giuseppe Mazzini",
+          "Giuseppe Garibaldi",
+          "Vittorio Emanuele II"
+        ],
+        "corretta": 2
+      },
+      {
+        "tipo": "vf",
+        "testo": "Il Regno d'Italia fu proclamato nel 1861.",
+        "risposte": [
+          "Vero",
+          "Falso"
+        ],
+        "corretta": 0
+      },
+      {
+        "tipo": "multipla",
+        "testo": "In che anno iniziò la Prima guerra mondiale?",
+        "risposte": [
+          "1905",
+          "1914",
+          "1918",
+          "1939"
+        ],
+        "corretta": 1
+      },
+      {
+        "tipo": "vf",
+        "testo": "Il muro di Berlino cadde nel 1991.",
+        "risposte": [
+          "Vero",
+          "Falso"
+        ],
+        "corretta": 1
+      },
+      {
+        "tipo": "vf",
+        "testo": "La Repubblica Italiana nacque con il referendum del 2 giugno 1946.",
+        "risposte": [
+          "Vero",
+          "Falso"
+        ],
+        "corretta": 0
+      }
+    ]
   }
 ]
