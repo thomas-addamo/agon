@@ -25,7 +25,9 @@ if (!fs.existsSync(FILE)) {
   fs.writeFileSync(FILE, '[]');
 }
 
-// token → nome utente dei docenti collegati
+// token → nome utente dei docenti collegati, per esempio
+//   { '3f2a9c...': 'thomas.addamo', '8b1e04...': 'daniele.porcaro' }
+// È un oggetto in memoria, NON un file: per questo i login si perdono a ogni riavvio.
 const sessioni = {};
 
 function leggi() {
@@ -36,6 +38,8 @@ function salva(docenti) {
   fs.writeFileSync(FILE, JSON.stringify(docenti, null, 2));
 }
 
+// Se arriva qualcosa che non è una stringa (es. un numero o niente) restituisce '',
+// altrimenti toglie gli spazi all'inizio e alla fine (vale anche per la password)
 function pulisci(testo) {
   return typeof testo === 'string' ? testo.trim() : '';
 }
@@ -71,6 +75,8 @@ function login(utente, password) {
     return { errore: 'Nome utente o password sbagliati' };
   }
 
+  // find restituisce proprio l'oggetto dentro l'array "docenti" (non una copia):
+  // aggiungendo l'accesso a "docente" cambia anche "docenti", che poi salvo
   docente.accessi.push(new Date().toISOString());
   salva(docenti);
 
@@ -83,7 +89,8 @@ function logout(token) {
   delete sessioni[token];
 }
 
-// Restituisce il nome del docente a cui appartiene il token, oppure null
+// Restituisce il nome del docente a cui appartiene il token, oppure null.
+// Se il token è sbagliato o manca, sessioni[token] è undefined e "|| null" lo trasforma in null
 function utenteDaToken(token) {
   return sessioni[token] || null;
 }
@@ -96,6 +103,8 @@ function richiediLogin(req, res, next) {
   if (utente === null) {
     return res.status(401).json({ errore: 'Devi fare il login' });
   }
+  // req è un oggetto: aggiungo "utente", così le rotte che vengono dopo
+  // (per esempio in rotte/quiz.js) sanno chi sta facendo la richiesta
   req.utente = utente;
   next();
 }

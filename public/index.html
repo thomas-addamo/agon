@@ -98,14 +98,17 @@
 <script src="effetti.js"></script>
 <script>
   // [WS] mi collego al server WebSocket: stesso indirizzo della pagina,
-  // con ws:// al posto di http:// (come negli esercizi in classe)
+  // con ws:// al posto di http:// (come negli esercizi in classe).
+  // La regex /^http/ cambia solo la parola "http" all'inizio (^ = inizio):
+  // http://192.168.1.20:3000 → ws://192.168.1.20:3000 (e https → wss)
   const webSocket = new WebSocket(location.origin.replace(/^http/, 'ws'));
 
   let mioNome = null;     // diventa il nome quando il server conferma l'entrata
   let miaScelta = null;   // risposta data alla domanda in corso
   let conto = null;       // setInterval del conto alla rovescia
 
-  // [JS] mostra una sola schermata e nasconde le altre
+  // [JS] mostra una sola schermata e nasconde le altre: mostra('attesa') lascia
+  // visibile solo la <section id="schermata-attesa">, tutte le altre prendono hidden
   function mostra(nome) {
     document.querySelectorAll('.schermata').forEach((s) => {
       s.hidden = s.id !== 'schermata-' + nome;
@@ -151,6 +154,7 @@
       const bottone = document.createElement('button');
       bottone.className = 'risposta r' + i + (risposta.length > 24 ? ' lunga' : '');   // testo lungo: carattere più piccolo
       bottone.textContent = puntiACapo(risposta);
+      // ogni bottone "ricorda" il suo i: cliccando il terzo, i vale 2
       bottone.addEventListener('click', () => {
         miaScelta = i;
         manda({ type: 'risposta', scelta: i });
@@ -180,8 +184,11 @@
       timer.classList.toggle('ultimi', secondi <= 5);
       if (secondi > 5) ripeti(numero, 'tic');   // piccolo scatto a ogni secondo
     }
+    // fermo il conto della domanda precedente, altrimenti ne girerebbero due insieme
     clearInterval(conto);
-    // la barra deve tornare piena di colpo, non con la transizione
+    // la barra deve tornare piena di colpo, non con la transizione:
+    // tolgo la transizione, la riempio, offsetWidth obbliga il browser a disegnarla
+    // subito così, poi rimetto la transizione per i secondi successivi
     barra.style.transition = 'none';
     disegna();
     void barra.offsetWidth;
@@ -207,7 +214,9 @@
       esito.className = 'esito sbagliato';
     }
 
-    // [JS] cerco la mia riga in classifica con findIndex
+    // [JS] cerco la mia riga in classifica con findIndex. Il server non dice
+    // "hai risposto giusto": lo calcolo io confrontando miaScelta con data.corretta.
+    // findIndex parte da 0, per questo la posizione mostrata è posizione + 1.
     const posizione = data.classifica.findIndex((g) => g.nome === mioNome);
     const io = data.classifica[posizione];
     document.getElementById('posizione').textContent =

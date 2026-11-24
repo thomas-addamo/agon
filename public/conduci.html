@@ -89,6 +89,8 @@
   // [WS] mi collego al server WebSocket e appena la connessione è aperta
   // chiedo di creare una partita con il quiz scelto, mandando il token del login.
   // Se questa pagina si chiude (o si ricarica) la partita finisce per tutti.
+  // "token" non è dichiarato qui: arriva da sessione.js, caricato prima di questo script.
+  // onopen serve perché non si può mandare nulla finché la connessione non è aperta.
   const webSocket = new WebSocket(location.origin.replace(/^http/, 'ws'));
   webSocket.onopen = () => manda({ type: 'crea', token: token, quiz: idQuiz });
 
@@ -100,6 +102,9 @@
   let conto = null;
   let giaInSala = [];   // nomi già visti in sala: solo i nuovi entrano con l'animazione
 
+  // un solo bottone per tre azioni (avvia, chiudi domanda, prossima): la pagina
+  // manda sempre 'avanti' ed è il server a decidere cosa fare in base alla fase.
+  // La pagina cambia solo la scritta del bottone quando arriva la fase nuova.
   bottoneAvanti.addEventListener('click', () => {
     document.getElementById('errore-partita').textContent = '';
     manda({ type: 'avanti' });

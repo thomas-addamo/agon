@@ -84,6 +84,8 @@
       const elimina = document.createElement('button');
       elimina.className = 'bottone secondario';
       elimina.textContent = 'Elimina';
+      // conferma è null finché non si clicca; dopo il primo clic contiene il
+      // setTimeout che fra 3 secondi riporta il bottone a "Elimina"
       let conferma = null;
       elimina.addEventListener('click', async () => {
         if (!conferma) {
@@ -121,6 +123,9 @@
     const miei = elenco.filter((q) => q.mio);
     const altri = elenco.filter((q) => !q.mio);
 
+    // map chiama schedaQuiz(q, i) per ogni quiz (i = posizione, serve per la cascata)
+    // e restituisce un array di schede; i tre puntini "..." le passano una per una
+    // a replaceChildren, che toglie le schede vecchie e mette le nuove
     document.getElementById('miei').replaceChildren(...miei.map(schedaQuiz));
     document.getElementById('altri').replaceChildren(...altri.map(schedaQuiz));
     document.getElementById('miei-vuoto').hidden = miei.length > 0;

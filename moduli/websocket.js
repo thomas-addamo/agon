@@ -60,11 +60,16 @@ function prossimaDomanda(partita) {
   cambiaFase(partita, msg);
   if (msg.type === 'domanda') {
     broadcast(partita, partite.contaRisposte(partita));
-    // la domanda si chiude da sola quando finisce il tempo
+    // la domanda si chiude da sola quando finisce il tempo.
+    // La freccia () => serve per passare "partita" a chiudiDomanda: scrivendo
+    // setTimeout(chiudiDomanda(partita), ...) la funzione partirebbe subito.
+    // Il timer lo salvo nella partita per poterlo fermare (clearTimeout).
     partita.timer = setTimeout(() => chiudiDomanda(partita), msg.tempo * 1000);
   }
 }
 
+// Si arriva qui in tre modi: tempo scaduto, risposte di tutti, pulsante del docente.
+// clearTimeout ferma il timer, così la domanda non viene chiusa una seconda volta.
 function chiudiDomanda(partita) {
   clearTimeout(partita.timer);
   cambiaFase(partita, partite.chiudiDomanda(partita));
@@ -102,6 +107,8 @@ function avviaWebSocket(server) {
   // [WS] evento 'connection': scatta ogni volta che un browser si collega;
   // ws è il socket di quel client
   ws_server.on('connection', (ws) => {
+    // ws è un oggetto JavaScript: posso aggiungergli proprietà mie (id, pin,
+    // docente, nome) e ritrovarle in ogni messaggio di questo stesso client
     quale++;
     ws.id = quale;
     ws.pin = null;        // la partita in cui si trova
@@ -123,6 +130,8 @@ function avviaWebSocket(server) {
       if (arriva.type === 'crea') {
         if (ws.pin !== null) return;   // ha già una partita
         const utente = utenti.utenteDaToken(arriva.token);
+        // "return manda(...)": mando la risposta e con return esco subito
+        // dalla funzione, così il codice sotto non viene eseguito
         if (utente === null) {
           return manda(ws, { type: 'non-autorizzato' });
         }
@@ -135,6 +144,7 @@ function avviaWebSocket(server) {
         ws.pin = partita.pin;
         console.log('Il docente ' + utente + ' ha avviato "' + quiz.nome + '" con PIN ' + partita.pin);
         manda(ws, { type: 'creata', pin: partita.pin, nome: quiz.nome, domande: quiz.domande.length });
+        // ultimoMessaggio dice al client in che fase è la partita (qui: 'attesa')
         manda(ws, partita.ultimoMessaggio);
         mandaGiocatori(partita);
         return;
@@ -155,12 +165,16 @@ function avviaWebSocket(server) {
         ws.nome = esito.nome;
         console.log('Il client ' + ws.id + ' è entrato come ' + ws.nome + ' nella partita ' + ws.pin);
         manda(ws, { type: 'entrato', nome: ws.nome, quiz: partita.nome });
+        // chi entra a partita già iniziata (o ricarica la pagina) riceve subito
+        // l'ultima fase mandata a tutti: vede la stessa schermata degli altri
         manda(ws, partita.ultimoMessaggio);
         mandaGiocatori(partita);
         return;
       }
 
-      // tutti gli altri messaggi riguardano la partita in cui si trova il client
+      // tutti gli altri messaggi riguardano la partita in cui si trova il client.
+      // Il nome "partita" è già usato nei due if sopra, ma una const dichiarata
+      // dentro le { } di un if esiste solo lì: questa è una variabile diversa.
       const partita = partite.trova(ws.pin);
       if (!partita) return;
 
@@ -182,6 +196,8 @@ function avviaWebSocket(server) {
     // [WS] evento 'close': il client ha chiuso la pagina o ha perso la connessione
     ws.on('close', () => {
       console.log('Client has disconnected! id = ' + ws.id);
+      // se il client non era entrato in nessuna partita ws.pin è null e trova
+      // restituisce null; restituisce null anche se la partita è già chiusa
       const partita = partite.trova(ws.pin);
       if (!partita) return;
 

@@ -30,6 +30,10 @@ const partite = {};
 // PIN casuale di 6 cifre, diverso da quelli già in uso
 function nuovoPin() {
   let pin;
+  // do...while: genero un PIN almeno una volta e ripeto finché ne esce uno
+  // non ancora usato (partite[pin] è undefined se il PIN è libero).
+  // Math.random() * 900000 va da 0 a 899999: +100000 dà sempre 6 cifre (100000-999999).
+  // Il PIN è una stringa perché è la chiave dell'oggetto "partite".
   do {
     pin = String(Math.floor(100000 + Math.random() * 900000));
   } while (partite[pin]);
@@ -54,7 +58,9 @@ function crea(quiz) {
   return partita;
 }
 
-// La partita con quel PIN, oppure null (il PIN può arrivare con spazi)
+// La partita con quel PIN, oppure null (il PIN può arrivare con spazi).
+// La regex /\s/g trova tutti gli spazi (\s = spazio, g = tutti, non solo il primo)
+// e replace li toglie: "482 913" diventa "482913".
 function trova(pin) {
   return partite[String(pin).replace(/\s/g, '')] || null;
 }
@@ -126,6 +132,7 @@ function avvia(partita) {
 // Passa alla domanda successiva. Restituisce il messaggio 'domanda',
 // oppure il messaggio 'fine' se le domande sono finite.
 function prossimaDomanda(partita) {
+  // indice parte da -1 (nessuna domanda): il primo ++ lo porta a 0, la prima domanda
   partita.indice++;
   if (partita.indice >= partita.domande.length) {
     partita.fase = 'fine';
@@ -156,16 +163,22 @@ function prossimaDomanda(partita) {
 // Registra la risposta di uno studente. Restituisce true se è stata accettata.
 function rispondi(partita, nome, scelta) {
   const giocatore = trovaGiocatore(partita, nome);
+  // rifiuto la risposta se: non c'è una domanda aperta, il giocatore non esiste,
+  // oppure ha già risposto (scelta !== null): si risponde una volta sola
   if (partita.fase !== 'domanda' || !giocatore || giocatore.scelta !== null) {
     return false;
   }
   const domanda = partita.domande[partita.indice];
+  // la scelta arriva dal browser, quindi la controllo: deve essere un numero
+  // intero tra 0 e il numero di risposte (2 per il vero/falso, 4 per la multipla)
   if (!Number.isInteger(scelta) || scelta < 0 || scelta >= domanda.risposte.length) {
     return false;
   }
 
   giocatore.scelta = scelta;
   if (scelta === domanda.corretta) {
+    // Date.now() è in millisecondi: / 1000 per avere i secondi passati dall'inizio
+    // della domanda. Math.max(0, ...) evita punti negativi se si risponde all'ultimo.
     const secondiPassati = Math.floor((Date.now() - partita.inizio) / 1000);
     const secondiRimasti = Math.max(0, partita.tempo - secondiPassati);
     giocatore.guadagno = PUNTI_BASE + secondiRimasti * PUNTI_SECONDO;

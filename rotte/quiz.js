@@ -33,13 +33,17 @@ router.get('/', (req, res) => {
     autore: q.autore,
     tempo: q.tempo,
     numeroDomande: q.domande.length,
+    // req.utente l'ha messo il middleware richiediLogin: true se il quiz è di
+    // chi sta guardando, così la pagina sa dove mostrare "Modifica" ed "Elimina"
     mio: q.autore === req.utente,
   }));
   res.json(elenco);
 });
 
 // [EXPRESS] rotta con parametro: il valore di :id si legge in req.params.id
-// (è sempre una stringa, quindi lo converto in numero)
+// (è sempre una stringa, quindi lo converto in numero: nel file gli id sono
+// numeri e "3" === 3 sarebbe falso).
+// '/' e '/:id' sono rotte diverse: GET /quiz va alla prima, GET /quiz/3 alla seconda.
 router.get('/:id', (req, res) => {
   const quiz = archivio.trova(Number(req.params.id));
   if (!quiz) {

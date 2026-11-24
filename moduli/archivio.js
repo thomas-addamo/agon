@@ -48,6 +48,8 @@ function controllaDomanda(dati) {
   }
 
   let risposte;
+  // per il vero/falso le risposte le scrive il server, non il docente:
+  // qualunque cosa arrivi dal browser, diventano sempre ['Vero', 'Falso']
   if (dati.tipo === 'vf') {
     risposte = ['Vero', 'Falso'];
   } else if (dati.tipo === 'multipla') {
@@ -62,6 +64,8 @@ function controllaDomanda(dati) {
     return { errore: 'tipo di domanda non valido' };
   }
 
+  // "corretta" è la POSIZIONE della risposta giusta nell'array (0 = prima, 1 = seconda...),
+  // non il suo testo: deve stare tra 0 e risposte.length - 1
   const corretta = Number(dati.corretta);
   if (!Number.isInteger(corretta) || corretta < 0 || corretta >= risposte.length) {
     return { errore: 'scegli la risposta giusta' };
@@ -108,7 +112,10 @@ function aggiungi(dati, autore) {
   if (esito.errore) return esito;
 
   const elenco = leggi();
-  // il nuovo id è il più grande già usato + 1
+  // il nuovo id è il più grande già usato + 1.
+  // map crea l'array degli id ([1, 2, 5]) e i tre puntini "..." lo aprono in
+  // argomenti separati, perché Math.max vuole Math.max(1, 2, 5) e non un array.
+  // Se non ci sono quiz (elenco vuoto) il primo id è 1.
   const id = elenco.length > 0 ? Math.max(...elenco.map((q) => q.id)) + 1 : 1;
   const quiz = { id: id, nome: esito.quiz.nome, autore: autore, tempo: esito.quiz.tempo, creato: new Date().toISOString(), domande: esito.quiz.domande };
 
@@ -128,6 +135,8 @@ function modifica(id, dati, utente) {
   const esito = controllaQuiz(dati);
   if (esito.errore) return { errore: esito.errore, codice: 400 };
 
+  // find ha restituito proprio l'oggetto dentro "elenco" (non una copia):
+  // cambiando "quiz" cambia anche "elenco", e salvo l'elenco intero
   quiz.nome = esito.quiz.nome;
   quiz.tempo = esito.quiz.tempo;
   quiz.domande = esito.quiz.domande;
@@ -143,6 +152,7 @@ function elimina(id, utente) {
   if (!quiz) return { errore: 'Quiz non trovato', codice: 404 };
   if (quiz.autore !== utente) return { errore: 'Puoi eliminare solo i tuoi quiz', codice: 403 };
 
+  // filter tiene tutti i quiz tranne quello con questo id: salvo l'elenco senza di lui
   salva(elenco.filter((q) => q.id !== id));
   return null;
 }

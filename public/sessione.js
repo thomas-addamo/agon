@@ -4,6 +4,10 @@
 //
 //  Il token arriva dalla pagina di login ed è salvato nel browser
 //  (localStorage). Senza token si torna al login.
+//
+//  ATTENZIONE: questo file va caricato PRIMA dello script della pagina.
+//  token, api() e vaiAlLogin() sono dichiarati qui ma usati là: i file
+//  caricati con <script src> nella stessa pagina condividono le variabili.
 // =====================================================================
 
 const token = localStorage.getItem('agon-token');
@@ -19,6 +23,8 @@ function vaiAlLogin() {
 // Authorization. Se il server risponde 401 il token non vale più (per esempio
 // il server è stato riavviato) e torno al login.
 async function api(indirizzo, opzioni = {}) {
+  // Object.assign unisce due oggetti: il token più le intestazioni passate dalla
+  // pagina (per esempio Content-Type per le POST), senza perdere nessuna delle due
   opzioni.headers = Object.assign({ Authorization: token }, opzioni.headers);
   const risposta = await fetch(indirizzo, opzioni);
   if (risposta.status === 401) vaiAlLogin();

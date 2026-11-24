@@ -123,8 +123,11 @@
         d.risposte.map((r, j) => (j === d.corretta ? '✓ ' + r : r)).join('  ·  ');
       if (i === nuova) li.classList.add('nuova');   // la domanda appena aggiunta entra animata
 
+      // "destrutturazione": i due bottoni trovati vanno nelle variabili modifica ed elimina
       const [modifica, elimina] = li.querySelectorAll('button');
-      // Modifica: la domanda torna nel form e lascia l'elenco
+      // Modifica: la domanda torna nel form e lascia l'elenco.
+      // Dopo ogni splice ridisegno tutta la lista: così ogni riga ha di nuovo
+      // l'indice i giusto (togliendo la 2ª, la 3ª diventa la 2ª)
       modifica.addEventListener('click', () => {
         riempiForm(d);
         domande.splice(i, 1);
@@ -160,10 +163,14 @@
 
   function riempiForm(d) {
     tipo.value = d.tipo;
+    // cambiare il valore da JavaScript NON fa scattare l'evento 'change':
+    // lo lancio io, così si vedono i campi giusti (multipla o vero/falso)
     tipo.dispatchEvent(new Event('change'));
     document.getElementById('testo-domanda').value = d.testo;
     if (d.tipo === 'multipla') {
       document.querySelectorAll('.testo-risposta').forEach((campo, j) => (campo.value = d.risposte[j]));
+      // selettore CSS costruito con la stringa: se corretta è 2 diventa
+      // input[name="corretta"][value="2"], cioè il pallino della terza risposta
       document.querySelector('input[name="corretta"][value="' + d.corretta + '"]').checked = true;
     } else {
       document.querySelector('input[name="corretta-vf"][value="' + d.corretta + '"]').checked = true;
@@ -176,6 +183,8 @@
     const d = { tipo: tipo.value, testo: document.getElementById('testo-domanda').value.trim() };
     if (d.testo === '') return 'Scrivi il testo della domanda';
     if (d.tipo === 'multipla') {
+      // querySelectorAll restituisce una NodeList, che non ha map:
+      // [...lista] la trasforma in un array vero
       d.risposte = [...document.querySelectorAll('.testo-risposta')].map((campo) => campo.value.trim());
       if (d.risposte.some((r) => r === '')) return 'Compila tutte e 4 le risposte';
       d.corretta = Number(document.querySelector('input[name="corretta"]:checked').value);

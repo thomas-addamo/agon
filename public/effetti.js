@@ -53,8 +53,10 @@ function contaSu(el, da, a, durata = 800, prefisso = '') {
   }
   const inizio = performance.now();
   function passo(adesso) {
+    // t va da 0 (inizio) a 1 (fine): quanta parte dell'animazione è passata
     const t = Math.min(1, (adesso - inizio) / durata);
     const morbido = 1 - Math.pow(1 - t, 3);          // rallenta verso la fine
+    // passo chiama di nuovo sé stessa al fotogramma dopo, finché t non arriva a 1
     el.textContent = prefisso + Math.round(da + (a - da) * morbido);
     if (t < 1) requestAnimationFrame(passo);
   }
@@ -138,9 +140,12 @@ function disegnaClassifica(lista, classifica, mioNome) {
     riga.style.setProperty('--i', i);         // ritardo a cascata, usato dal CSS
     lista.appendChild(riga);
 
+    // prima = com'era questo giocatore nella classifica precedente
+    // (undefined se è la prima classifica o se è appena entrato)
     const prima = classificaPrecedente[g.nome];
     contaSu(riga.children[2], prima ? prima.punti : 0, g.punti, 900);
     if (!prima) riga.classList.add('nuova');
+    // { riga, prima, i } è un modo breve per scrivere { riga: riga, prima: prima, i: i }
     return { riga, prima, i };
   });
 
@@ -149,6 +154,9 @@ function disegnaClassifica(lista, classifica, mioNome) {
   if (!movimentoRidotto) {
     righe.forEach(({ riga, prima, i }) => {
       if (!prima || prima.posizione === i) return;
+      // la riga è già al posto nuovo: la sposto indietro di "salto" pixel (dove era
+      // prima) e la faccio tornare a zero. Chi sale da 3° a 1° parte 2 righe più in
+      // basso; +8 è lo spazio tra le righe (gap della lista nel CSS)
       const salto = (prima.posizione - i) * (riga.offsetHeight + 8);
       riga.animate(
         [{ transform: 'translateY(' + salto + 'px)' }, { transform: 'none' }],

@@ -68,6 +68,8 @@ function indirizziRete() {
 
 // [EXPRESS] creo l'app e la configuro a catena, come negli esercizi in classe.
 // L'ordine conta: Express prova i middleware e le rotte dall'alto verso il basso.
+// ATTENZIONE: "server" NON è l'app Express ma quello che restituisce l'ultimo
+// anello della catena, .listen(), cioè il server HTTP: è quello che serve a ws.
 const server = express()
   .use(registro)
 
@@ -89,6 +91,10 @@ const server = express()
   //   /conduci  → la partita da proiettare, con il PIN
   // Se non trovano il token rimandano da sole a /login; i dati veri
   // (quiz e comandi della partita) sono comunque protetti dal server.
+  // ATTENZIONE: express.static serve già /docente.html, ma NON /docente
+  // (senza .html): per gli indirizzi "puliti" servono queste rotte.
+  // Con { root: __dirname } il percorso '/public/...' parte dalla cartella
+  // del progetto, non dalla radice del disco.
   .get('/docente', (req, res) => res.sendFile('/public/docente.html', { root: __dirname }))
   .get('/editor', (req, res) => res.sendFile('/public/editor.html', { root: __dirname }))
   .get('/conduci', (req, res) => res.sendFile('/public/conduci.html', { root: __dirname }))
